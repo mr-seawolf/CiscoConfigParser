@@ -22,12 +22,14 @@ from  AccessListSubRule import *
 from  ObjectNetwork import *
 from  AccessGroup import *
 from  InterfaceObject import *
+from  TunnelGroupObject import *
+from CryptoMapObject import *
 
 
 def ParseMe(inputFile, options):
-	
+	#This are the Commands for Cisco ASA Firewalls
 	listOfCommands = ['hostname', 'name', 'interface', 'object-group', 'network-object', 'description', 'service-object', 'port-object', 'group-object', 'access-list', 'nat', 'static', \
-					 'access-group', 'crypto','domain-name','protocol-object','icmp-object', 'object', 'subnet', 'host', 'service']
+					 'access-group', 'crypto','domain-name','protocol-object','icmp-object', 'object', 'subnet', 'host', 'service','tunnel-group','default-group-policy']
 	listOfCiscoSwitchCommands = ['hostname', 'interface', 'switchport', 'spanning-tree']
 	StartOfNewCommandObject = True
 	linesIgnored = 0
@@ -61,6 +63,8 @@ def ParseMe(inputFile, options):
 	tempObjectGroupExpanded = []
 	listOfAccessGroups = []
 	listOfInterfaces = []
+	listOfTunnelGroups = []
+	listOfCryptoMaps = []
 	hostname = []
 	deviceRepoName = 'unknown'
 	deviceRepoRevisionNumber = 0
@@ -231,6 +235,8 @@ def ParseMe(inputFile, options):
 		listOfAccessLists
 		listOfObjects
 		listOfInterfaces
+		listOfTunnelGroups
+		listOfCryptoMaps
 		hostname
 				
 		objectExists = False
@@ -432,7 +438,22 @@ def ParseMe(inputFile, options):
 					if lineList[1] == 'voice':
 						if lineList[2] == 'vlan':
 							listOfInterfaces[-1].setVoiceVlan(lineList[3])	
-		
+		#Did not verify parsing with ASA docs, only with our configs
+		elif commandName == 'tunnel-group':
+			#Check if a tunnel-group object already exists with same peer ID
+			for x in listOfTunnelGroups:
+				if x.peer == lineList[1]:
+					objectExists = True
+				else:
+					objectExists = False
+			if objectExists == False:
+				listOfTunnelGroups.append(TunnelGroupObject(line))
+						
+		elif commandName == 'default-group-policy':
+			holder = 1+1
+		elif commandName == 'crypto':
+			holder = 1+1
+			
 						
 	# When parsing through the lines we need to check if the line starts with whitespace or not
 	
@@ -839,7 +860,7 @@ def ParseMe(inputFile, options):
 	def PrintStandardAclForHuman(aclSubRule):
 		outputFile.write(aclSubRule.fullLine)
 	
-	print "****************START PARSING CONFIG****************"
+	print "****************START PARSING CONFIG****************************"
 	#START PARSING THE inputFile
 	for line in inputFile:
 		linesProcessed += 1
