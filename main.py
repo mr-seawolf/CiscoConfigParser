@@ -100,6 +100,7 @@ def ParseMe(inputFile, options):
 	def ExpandRule(rule,listOfObjectGroups,listOfAccessLists):
 		#global listOfObjectGroups, tempObjectGroupExpanded
 		#global listOfAccessLists
+		global tempObjectGroupExpanded
 		tempExpandedRules = []
 		tempExpandedRulesContainsOG = []
 		tempExpandedRules2 = []
@@ -178,7 +179,8 @@ def ParseMe(inputFile, options):
 	
 	def ExpandObjectGroup(name,listOfObjectGroups):
 		listOfObjectGroups
-		tempObjectGroupExpanded = []
+		global tempObjectGroupExpanded
+		#tempObjectGroupExpanded = []
 		for x in listOfObjectGroups:
 			if x.name == name:
 				break
@@ -191,7 +193,8 @@ def ParseMe(inputFile, options):
 	
 	
 	def ExpandObjectGroupForProtocolAttributes(name,listOfObjectGroups):
-		tempObjectGroupExpanded = []
+		global tempObjectGroupExpanded
+		#tempObjectGroupExpanded = []
 		for x in listOfObjectGroups:
 			if x.name == name:
 				break
@@ -201,7 +204,8 @@ def ParseMe(inputFile, options):
 		return tempObjectGroupExpanded
 	
 	def ExpandObjectGroupForDestPorts(name,listOfObjectGroups):
-		tempObjectGroupExpanded = []
+		global tempObjectGroupExpanded
+		#tempObjectGroupExpanded = []
 		for x in listOfObjectGroups:
 			if x.name == name:
 				break
@@ -477,6 +481,7 @@ def ParseMe(inputFile, options):
 	
 	def SqlUploadAclSubrules(aclSubRule,cur,listOfHosts,listOfObjectGroups,hostname):
 		#global tempObjectGroupExpanded, listOfHosts, hostname,listOfObjectGroups
+		global tempObjectGroupExpanded
 		list1 = []
 		list2 = []
 		list3 = []
@@ -614,6 +619,7 @@ def ParseMe(inputFile, options):
 
 	def ExpandExtendedAclForHuman(aclSubRule,listOfHosts,listOfObjectGroups,listOfServiceObjects):
 		#global tempObjectGroupExpanded, listOfHosts, listOfObjectGroups
+		global tempObjectGroupExpanded
 		list1 = []
 		list2 = []
 		list3 = []
