@@ -433,7 +433,7 @@ def ParseMe(inputFile, options):
 					if lineList[1] == 'portfast':
 						listOfInterfaces[-1].setSpanningtreePortfastEnabled(True)
 		elif commandName == 'switchport':
-			if currentOpenRootCommand == 'interface':
+			if currentOpenRootCommand == 'interface' and (len(lineList) > 1):
 					if lineList[1] == 'mode':
 						listOfInterfaces[-1].setSwitchportMode(lineList[2])
 					if lineList[1] == 'access':
@@ -1086,6 +1086,10 @@ def ParseMe(inputFile, options):
 	outputFileDebugDump.write("=================------------------DUMP listOfInterfaces[]---------------======================\n")
 	for x in listOfInterfaces:
 		x.writeToDebugLog(outputFileDebugDump)
+	outputFileDebugDump.write("=================------------------DUMP listOfTunnelGroups[]------------========================\n")
+	for x in listOfTunnelGroups:
+		x.writeToDebugLog(outputFileDebugDump)
+	
 
 	#print "NumberOfObjectGroups ",len(listOfObjectGroups)
 	#for x in listOfObjectGroups:
