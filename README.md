@@ -7,7 +7,6 @@ Zero Exception catching :)
 
 
 Required configuration file in same location as main.py = conf.ini
--------
 [Basic]
 #Mode Options
 #All = Ask alot of questions
@@ -31,4 +30,4 @@ SVNrealm=EXAMPLE.COM
 SVNrepo=https://svn.example.com/example/CVS/networking/configs/
 SVNuser=examplesvnuser
 SVNpassword=examplesvnpassword
----------
+
