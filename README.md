@@ -6,6 +6,9 @@ To parse though Cisco IOS and ASA configs to pull information out and into a tex
 Zero Exception catching :)
 
 
+WARNING-VIEW RAW TO LOOK AT CONFIG EXAMPLE.
+
+
 Required configuration file in same location as main.py = conf.ini
 [Basic]
 #Mode Options
