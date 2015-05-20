@@ -22,16 +22,20 @@ from  AccessListSubRule import *
 from  ObjectNetwork import *
 from  AccessGroup import *
 from  InterfaceObject import *
+from  TunnelGroupObject import *
+from CryptoMapObject import *
+from operator import pos
 
 
 def ParseMe(inputFile, options):
-	
+	#This are the Commands for Cisco ASA Firewalls
 	listOfCommands = ['hostname', 'name', 'interface', 'object-group', 'network-object', 'description', 'service-object', 'port-object', 'group-object', 'access-list', 'nat', 'static', \
-					 'access-group', 'crypto','domain-name','protocol-object','icmp-object', 'object', 'subnet', 'host', 'service']
+					 'access-group', 'crypto','domain-name','protocol-object','icmp-object', 'object', 'subnet', 'host', 'service','tunnel-group','default-group-policy','nat']
 	listOfCiscoSwitchCommands = ['hostname', 'interface', 'switchport', 'spanning-tree']
 	StartOfNewCommandObject = True
 	linesIgnored = 0
 	linesProcessed = 0
+	linesTotal = 0
 	networkObjectCount = 0
 	serviceObjectCount = 0
 	portObjectCount = 0
@@ -61,6 +65,8 @@ def ParseMe(inputFile, options):
 	tempObjectGroupExpanded = []
 	listOfAccessGroups = []
 	listOfInterfaces = []
+	listOfTunnelGroups = []
+	listOfCryptoMaps = []
 	hostname = []
 	deviceRepoName = 'unknown'
 	deviceRepoRevisionNumber = 0
@@ -96,6 +102,7 @@ def ParseMe(inputFile, options):
 	def ExpandRule(rule,listOfObjectGroups,listOfAccessLists):
 		#global listOfObjectGroups, tempObjectGroupExpanded
 		#global listOfAccessLists
+		global tempObjectGroupExpanded
 		tempExpandedRules = []
 		tempExpandedRulesContainsOG = []
 		tempExpandedRules2 = []
@@ -174,7 +181,8 @@ def ParseMe(inputFile, options):
 	
 	def ExpandObjectGroup(name,listOfObjectGroups):
 		listOfObjectGroups
-		tempObjectGroupExpanded = []
+		global tempObjectGroupExpanded
+		#tempObjectGroupExpanded = []
 		for x in listOfObjectGroups:
 			if x.name == name:
 				break
@@ -187,7 +195,8 @@ def ParseMe(inputFile, options):
 	
 	
 	def ExpandObjectGroupForProtocolAttributes(name,listOfObjectGroups):
-		tempObjectGroupExpanded = []
+		global tempObjectGroupExpanded
+		#tempObjectGroupExpanded = []
 		for x in listOfObjectGroups:
 			if x.name == name:
 				break
@@ -197,7 +206,8 @@ def ParseMe(inputFile, options):
 		return tempObjectGroupExpanded
 	
 	def ExpandObjectGroupForDestPorts(name,listOfObjectGroups):
-		tempObjectGroupExpanded = []
+		global tempObjectGroupExpanded
+		#tempObjectGroupExpanded = []
 		for x in listOfObjectGroups:
 			if x.name == name:
 				break
@@ -231,6 +241,8 @@ def ParseMe(inputFile, options):
 		listOfAccessLists
 		listOfObjects
 		listOfInterfaces
+		listOfTunnelGroups
+		listOfCryptoMaps
 		hostname
 				
 		objectExists = False
@@ -423,7 +435,7 @@ def ParseMe(inputFile, options):
 					if lineList[1] == 'portfast':
 						listOfInterfaces[-1].setSpanningtreePortfastEnabled(True)
 		elif commandName == 'switchport':
-			if currentOpenRootCommand == 'interface':
+			if currentOpenRootCommand == 'interface' and (len(lineList) > 1):
 					if lineList[1] == 'mode':
 						listOfInterfaces[-1].setSwitchportMode(lineList[2])
 					if lineList[1] == 'access':
@@ -432,8 +444,87 @@ def ParseMe(inputFile, options):
 					if lineList[1] == 'voice':
 						if lineList[2] == 'vlan':
 							listOfInterfaces[-1].setVoiceVlan(lineList[3])	
-		
+		#Did not verify parsing with ASA docs, only with our configs
+		elif commandName == 'tunnel-group':
+			#Check if a tunnel-group object already exists with same peer ID
+			for x in listOfTunnelGroups:
+				if x.peer == lineList[1]:
+					objectExists = True
+				else:
+					objectExists = False
+			if objectExists == False:
+				listOfTunnelGroups.append(TunnelGroupObject(line))
 						
+		elif commandName == 'default-group-policy':
+			holder = 1+1
+		elif commandName == 'crypto':
+			holder = 1+1
+		elif commandName == 'nat':
+			natSourceInterface ='not-set'
+			natDestInterface = 'not-set'
+			natType = 'not-set'
+			natTranslation ='not-set'
+						
+			if currentOpenRootCommand == 'object':
+				#break down the line.
+				#Common sample nat (sourceInt,destInt) static TranslatedNat
+				natType = lineList[2]
+				natTranslation = lineList[3]
+				natLineNum = linesTotal
+				tempStrip = lineList[1].strip('()')
+				#print tempStrip
+				tempSplit = tempStrip.split(',')
+				#print tempSplit[0]
+				#print tempSplit[1]
+				natSourceInterface = tempSplit[0]
+				natDestInterface = tempSplit[1]
+				#We need to find what networkobject to apply these nats to
+				currentOpenRootCommandLineList = currentOpenRootCommandLine.split()
+				findObjectNamed = currentOpenRootCommandLineList[2]
+				pos = 0
+				for o in listOfHosts:
+					if o.name == findObjectNamed:
+						listOfHosts[pos].setNatSourceInterface(natSourceInterface)
+						listOfHosts[pos].setNatDestInterface(natDestInterface)
+						listOfHosts[pos].setNatType(natType)
+						listOfHosts[pos].setNatTranslation(natTranslation)
+						listOfHosts[pos].setNatLineNum(natLineNum)
+					else:
+						pos += 1	
+						
+		#This is for parsing static NATs in older ASA versions
+		elif commandName == 'static':
+			natSourceInterface ='not-set'
+			natDestInterface = 'not-set'
+			natType = 'not-set'
+			natTranslation ='not-set'
+			
+			if currentOpenRootCommand == 'static':
+				#break down the line.
+				#Common sample static (dmz1,outside) 207.200.48.43 192.168.18.100 netmask 255.255.255.255
+				natType = lineList[0]
+				natTranslation = lineList[2]
+				tempStrip = lineList[1].strip('()')
+				#print tempStrip
+				tempSplit = tempStrip.split(',')
+				#print tempSplit[0]
+				#print tempSplit[1]
+				natSourceInterface = tempSplit[0]
+				natDestInterface = tempSplit[1]
+				#We need to find what networkobject to apply these nats to
+				#This will be older ASA version so its most likely an IP, so lets look for that
+				findObjectNamed = lineList[3]
+				pos = 0
+				for o in listOfHosts:
+					if o.ipAddy == findObjectNamed:
+						listOfHosts[pos].setNatSourceInterface(natSourceInterface)
+						listOfHosts[pos].setNatDestInterface(natDestInterface)
+						listOfHosts[pos].setNatType(natType)
+						listOfHosts[pos].setNatTranslation(natTranslation)
+						listOfHosts[pos].setNatLineNum(natLineNum)
+					else:
+						pos += 1
+										
 	# When parsing through the lines we need to check if the line starts with whitespace or not
 	
 	
@@ -456,6 +547,7 @@ def ParseMe(inputFile, options):
 	
 	def SqlUploadAclSubrules(aclSubRule,cur,listOfHosts,listOfObjectGroups,hostname):
 		#global tempObjectGroupExpanded, listOfHosts, hostname,listOfObjectGroups
+		global tempObjectGroupExpanded
 		list1 = []
 		list2 = []
 		list3 = []
@@ -593,6 +685,7 @@ def ParseMe(inputFile, options):
 
 	def ExpandExtendedAclForHuman(aclSubRule,listOfHosts,listOfObjectGroups,listOfServiceObjects):
 		#global tempObjectGroupExpanded, listOfHosts, listOfObjectGroups
+		global tempObjectGroupExpanded
 		list1 = []
 		list2 = []
 		list3 = []
@@ -839,10 +932,11 @@ def ParseMe(inputFile, options):
 	def PrintStandardAclForHuman(aclSubRule):
 		outputFile.write(aclSubRule.fullLine)
 	
-	print "****************START PARSING CONFIG****************"
+	print "****************START PARSING CONFIG****************************"
 	#START PARSING THE inputFile
 	for line in inputFile:
 		linesProcessed += 1
+		linesTotal += 1
 		lineList = line.split()
 		#print line
 		#print currentOpenRootCommand
@@ -863,6 +957,7 @@ def ParseMe(inputFile, options):
 				LineParser(lineList[0],lineList,line)
 			else:
 				linesIgnored += 1
+				linesTotal += 1
 				#outputFileDebugDump.write("IGNORE - THIS COMMAND NOT IN LIST " + lineList[0] + "\n") 
 		elif whiteSpace > 0 and currentWhiteSpaceLevel == 0:
 			currentWhiteSpaceLevel += 1
@@ -875,6 +970,7 @@ def ParseMe(inputFile, options):
 				LineParser(lineList[0],lineList,line)
 			else:
 				linesIgnored += 1
+				linesTotal += 1
 				#outputFileDebugDump.write("IGNORE - THIS COMMAND NOT IN LIST " + lineList[0] + "\n")
 			#outputFileDebugDump.write("2nd if CURRENT WHITE SPACE LEVEL= "+ str(currentWhiteSpaceLevel) + "\n")
 		
@@ -889,6 +985,7 @@ def ParseMe(inputFile, options):
 				LineParser(lineList[0],lineList,line)
 			else:
 				linesIgnored += 1
+				linesTotal += 1
 				#outputFileDebugDump.write("IGNORE - THIS COMMAND NOT IN LIST " + lineList[0] + "\n")
 			#outputFileDebugDump.write("3rd if CURRENT WHITE SPACE LEVEL= ", str(currentWhiteSpaceLevel) + "\n")
 	
@@ -903,6 +1000,7 @@ def ParseMe(inputFile, options):
 				LineParser(lineList[0],lineList,line)
 			else:
 				linesIgnored += 1
+				linesTotal += 1
 				#outputFileDebugDump.write("IGNORE - THIS COMMAND NOT IN LIST " + lineList[0] + "\n")
 			#outputFileDebugDump.write("4th if CURRENT WHITE SPACE LEVEL= ", str(currentWhiteSpaceLevel) + "\n")
 		previousLineWhiteSpace = whiteSpace		
@@ -1059,6 +1157,10 @@ def ParseMe(inputFile, options):
 	outputFileDebugDump.write("=================------------------DUMP listOfInterfaces[]---------------======================\n")
 	for x in listOfInterfaces:
 		x.writeToDebugLog(outputFileDebugDump)
+	outputFileDebugDump.write("=================------------------DUMP listOfTunnelGroups[]------------========================\n")
+	for x in listOfTunnelGroups:
+		x.writeToDebugLog(outputFileDebugDump)
+	
 
 	#print "NumberOfObjectGroups ",len(listOfObjectGroups)
 	#for x in listOfObjectGroups:
@@ -1190,6 +1292,7 @@ def ParseMe(inputFile, options):
 	print "Hostname = " + hostname[0]
 	print "Lines Processed = " + str(linesProcessed)
 	print "Lines Ignored = " + str(linesIgnored) 
+	print "lines total = " + str(linesTotal)
 	print "****************STOP PARSING CONFIG****************"
 	#print "Network Object Count (Unique)= " + str(networkObjectCount)
 	#print "Service Object Count (Unique)= " + str(serviceObjectCount)
