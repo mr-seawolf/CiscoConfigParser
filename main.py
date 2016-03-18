@@ -7,9 +7,9 @@ Created on Jun 29, 2013
 '''
 
 from ConfigParser import SafeConfigParser 
-import pysvn
+#import pysvn
 import getpass
-import MySQLdb
+#import MySQLdb
 import re
 from  NetworkObject import *
 from  ServiceObject import *
@@ -245,7 +245,7 @@ def ParseMe(inputFile, options):
 		listOfInterfaces
 		listOfTunnelGroups
 		listOfCryptoMaps
-		hostname
+#		hostname
 				
 		objectExists = False
 		
@@ -420,7 +420,7 @@ def ParseMe(inputFile, options):
 				x.listOfRules.append(line)
 		
 		elif commandName == 'hostname':
-				hostname.append(lineList[1])	
+				hostname.append(lineList[1])
 		#Handle interface command
 		elif commandName == 'interface':
 			for x in listOfInterfaces:
@@ -530,7 +530,7 @@ def ParseMe(inputFile, options):
 		elif commandName == 'ntp':
 			#Temp ghetto job, dump to a file for ntp config lines
 			outputNTPFile = open(installedDir+"NTPsettings", 'a')
-			outputNTPFile.write(hostname[0] +" " + line)	
+			outputNTPFile.write(hostname[0]+" " + line)	
 			
 											
 	# When parsing through the lines we need to check if the line starts with whitespace or not
@@ -937,6 +937,93 @@ def ParseMe(inputFile, options):
 			string1 = sFirstPad+' '+c1+pad1+fpad2+c2+pad2+fpad3+c3+pad3+fpad4+c4+pad4+fpad5+c5+pad5+'\n'
 			outputFile.write(string1)
 		
+	def ExpandExtendedAclForObject(aclSubRule,listOfHosts,listOfObjectGroups,listOfServiceObjects):
+		global tempObjectGroupExpanded
+		list1 = []
+		list2 = []
+		list3 = []
+		list4 = []
+		list5 = []
+		if aclSubRule.protocolIsO == True:
+			for x in listOfServiceObjects:
+				if x.name == aclSubRule.protocol:
+					break
+			list1 = [x.protocol]
+			tempStr = x.dest_operator
+			if tempStr == 'range':
+				tempStr = tempStr + " " + x.dest_startRange + " " + x.dest_stopRange
+			else:
+				tempStr = tempStr + " " + x.dest_port	
+			list5 = [tempStr]
+		elif aclSubRule.protocolIsOG == True:
+			tempObjectGroupExpanded = []
+			tempObjectGroupExpanded = ExpandObjectGroupForProtocolAttributes(aclSubRule.protocol,listOfObjectGroups)
+			list1 = tempObjectGroupExpanded 
+			tempObjectGroupExpanded = []
+			tempObjectGroupExpanded = ExpandObjectGroupForDestPorts(aclSubRule.protocol,listOfObjectGroups)
+			list5 = tempObjectGroupExpanded
+		elif aclSubRule.protocol != 'unknown':
+				list1 = [aclSubRule.protocol]
+		#SOURCE 
+		if aclSubRule.sourceIsOG == True:
+			#c2longest = len(aclSubRule.source) + len(' object-group')
+			tempObjectGroupExpanded = []
+			tempObjectGroupExpanded = ExpandObjectGroup(aclSubRule.source,listOfObjectGroups)
+			list2 = tempObjectGroupExpanded
+		elif aclSubRule.sourceIsO == True:
+			#look up the network object
+			for o in listOfHosts:
+				if o.name == aclSubRule.source:
+					tempStr = o.ipAddy + " " + o.subnet
+					#print tempStr
+					list2 = [tempStr]
+		else:
+			if aclSubRule.source != 'unknown':
+				list2 = [aclSubRule.source]
+				#c2longest = len(aclSubRule.source) + len(' 255.255.255.255')
+		#SOURCE PORTS
+		if aclSubRule.source_portIsOG == True:
+			#c3longest = len(aclSubRule.source_port) + len(' object-group')
+			tempObjectGroupExpanded = []
+			tempObjectGroupExpanded = ExpandObjectGroup(aclSubRule.source_port,listOfObjectGroups)
+			list3 = tempObjectGroupExpanded
+		else:
+			if aclSubRule.source_port !='unknown':
+				list3 =  [aclSubRule.source_port]
+		#DEST
+		if aclSubRule.destIsOG == True:
+			#c4longest = len(aclSubRule.dest) + len(' object-group')
+			tempObjectGroupExpanded = []
+			tempObjectGroupExpanded = ExpandObjectGroup(aclSubRule.dest,listOfObjectGroups)
+			list4 = tempObjectGroupExpanded
+		elif aclSubRule.destIsO == True:
+			#look up the network object
+			for o in listOfHosts:
+				if o.name == aclSubRule.dest:
+					tempStr = o.ipAddy + " " + o.subnet
+					list4 = [tempStr]
+		else:
+			if aclSubRule.dest != 'unknown':
+				list4 =  [aclSubRule.dest]
+				#c4longest = len(aclSubRule.dest) + len(' 255.255.255.255')
+		#DEST PORTS
+		if aclSubRule.dest_portIsOG == True:
+			#c5longest = len(aclSubRule.dest_port) + len(' object-group')
+			tempObjectGroupExpanded = []
+			tempObjectGroupExpanded = ExpandObjectGroup(aclSubRule.dest_port,listOfObjectGroups)
+			list5 = tempObjectGroupExpanded
+		
+		else:
+			if aclSubRule.dest_port != 'unknown':
+				list5 = [aclSubRule.dest_port]
+		
+		#Load lists 1-5 back into object
+		aclSubRule.protocol_expanded = list1
+		aclSubRule.source_ip_expanded = list2
+		aclSubRule.source_port_expanded = list3
+		aclSubRule.dest_ip_expanded = list4
+		aclSubRule.dest_port_expanded = list5
+	
 	def PrintStandardAclForHuman(aclSubRule):
 		outputFile.write(aclSubRule.fullLine)
 	
@@ -1021,6 +1108,13 @@ def ParseMe(inputFile, options):
 			tempACL.accessListSubRuleList.append(tempSubRuleObject)
 	#ABOVE here is required code for processing a config
 	
+	#Break down ACL's and add into the aclSubRule objects. Similar to the SQL load or pretty human printing
+	count = 0
+	#Break down the objects from listOfAccessLists and back to the same objects
+	for x in listOfAccessLists:
+		for y in x.accessListSubRuleList:
+			ExpandExtendedAclForObject(y,listOfHosts,listOfObjectGroups,listOfServiceObjects)
+
 	#Start SQLDB LOADING STUFF
 	if doSQLStuff == True:
 		isAlreadyInDB = False
@@ -1098,76 +1192,76 @@ def ParseMe(inputFile, options):
 	if doDebugDump == True:
 		outputFileDebugDump.write('STARTING DEBUG DUMP')
 	
-	#Test Dumping Access Groups
-	outputFile.write('******ACL Applied to each Interface******\n')
-	for x in listOfAccessGroups:
-		outputFile.write('Interface: '+x.interfaceAppliedTo+' '+x.direction+' ACL: '+x.aclApplied+'\n')
-
-	#Test for dumping all ACL sub rules for human readable
-	for x in listOfAccessLists:
-		outputFile.write('*********************START OF ACL************************\n')
-		#Check if this AccessList is applied to an interface
-		for z in listOfAccessGroups:
-			if z.aclApplied == x.name:
-				outputFile.write('*********************Applied to interface: '+z.interfaceAppliedTo+' '+z.direction+'*********************\n')
-		for y in x.accessListSubRuleList:
-			if y.accessListType == 'extended':
-				ExpandExtendedAclForHuman(y,listOfHosts,listOfObjectGroups,listOfServiceObjects)
-				outputFile.write ("\n")
-				#outputFile.write('**********************END OF ACL*************************\n')
-			elif y.accessListType == 'standard': 
-				#outputFile.write('*********************START OF ACL************************\n')
-				PrintStandardAclForHuman(y)
-		outputFile.write('**********************END OF ACL*************************\n')
+		#Test Dumping Access Groups
+		outputFile.write('******ACL Applied to each Interface******\n')
+		for x in listOfAccessGroups:
+			outputFile.write('Interface: '+x.interfaceAppliedTo+' '+x.direction+' ACL: '+x.aclApplied+'\n')
 	
-	#Print all network objects
-	outputFileDebugDump.write("=================------------------DUMP listOfHosts[]--------------===================\n")
-	for x in listOfHosts:
-		outputFileDebugDump.write("******************\n")
-		outputFileDebugDump.write(x.fullLine)
-		x.writeToDebugLog(outputFileDebugDump)
-	outputFileDebugDump.write("=================------------------DUMP listOfServiceObjects[]--------------===================\n")
-	#Print all service objects
-	for x in listOfServiceObjects:
-		outputFileDebugDump.write("******************\n")
-		outputFileDebugDump.write(x.fullLine)
-		x.writeToDebugLog(outputFileDebugDump)
-	#Print all accessListSubRules - These are each ACE in a ACL broken down into an object
-	outputFileDebugDump.write("=================------------------DUMP listOfAccessLists[] and each accessListSubRuleList[]--------------===================\n")
-	for x in listOfAccessLists:
-		for y in x.accessListSubRuleList:
+		#Test for dumping all ACL sub rules for human readable
+		for x in listOfAccessLists:
+			outputFile.write('*********************START OF ACL************************\n')
+			#Check if this AccessList is applied to an interface
+			for z in listOfAccessGroups:
+				if z.aclApplied == x.name:
+					outputFile.write('*********************Applied to interface: '+z.interfaceAppliedTo+' '+z.direction+'*********************\n')
+			for y in x.accessListSubRuleList:
+				if y.accessListType == 'extended':
+					ExpandExtendedAclForHuman(y,listOfHosts,listOfObjectGroups,listOfServiceObjects)
+					outputFile.write ("\n")
+					#outputFile.write('**********************END OF ACL*************************\n')
+				elif y.accessListType == 'standard': 
+					#outputFile.write('*********************START OF ACL************************\n')
+					PrintStandardAclForHuman(y)
+			outputFile.write('**********************END OF ACL*************************\n')
+		
+		#Print all network objects
+		outputFileDebugDump.write("=================------------------DUMP listOfHosts[]--------------===================\n")
+		for x in listOfHosts:
 			outputFileDebugDump.write("******************\n")
-			outputFileDebugDump.write(y.fullLine)
-			y.writeToDebugLog(outputFileDebugDump)
-	#Print all Prototcol objects in the listOfProtocolObjects[]
-	outputFileDebugDump.write("=================------------------DUMP listOfPortObjects[]--------------===================\n")
-	for x in listOfPortObjects:
-		outputFileDebugDump.write("******************\n")
-		outputFileDebugDump.write(x.fullLine)
-		x.writeToDebugLog(outputFileDebugDump)
-	#Print all Prototcol objects in the listOfProtocolObjects[]
-	outputFileDebugDump.write("=================------------------DUMP listOfIcmpObjects[]--------------===================\n")
-	for x in listOfIcmpObjects:
-		outputFileDebugDump.write("******************\n")
-		outputFileDebugDump.write(x.fullLine)
-		x.writeToDebugLog(outputFileDebugDump)
-	#Print all Prototcol objects in the listOfProtocolObjects[]
-	outputFileDebugDump.write("=================------------------DUMP listOfProtocolObjects[]--------------===================\n")
-	for x in listOfProtocolObjects:
-		outputFileDebugDump.write("******************\n")
-		outputFileDebugDump.write(x.fullLine)
-		x.writeToDebugLog(outputFileDebugDump)
-	#Print all the object groups in the listOfObjectGroups[] 
-	outputFileDebugDump.write("=================------------------DUMP listOfObjectGroups[] One Level--------------===================\n")
-	for x in listOfObjectGroups:
-		outputFileDebugDump.write("******************\n")
-		x.writeToDebugLogDirectItemsOnly(outputFileDebugDump)
-	outputFileDebugDump.write("=================------------------DUMP listOfInterfaces[]---------------======================\n")
-	for x in listOfInterfaces:
-		x.writeToDebugLog(outputFileDebugDump)
-	outputFileDebugDump.write("=================------------------DUMP listOfTunnelGroups[]------------========================\n")
-	for x in listOfTunnelGroups:
-		x.writeToDebugLog(outputFileDebugDump)
+			outputFileDebugDump.write(x.fullLine)
+			x.writeToDebugLog(outputFileDebugDump)
+		outputFileDebugDump.write("=================------------------DUMP listOfServiceObjects[]--------------===================\n")
+		#Print all service objects
+		for x in listOfServiceObjects:
+			outputFileDebugDump.write("******************\n")
+			outputFileDebugDump.write(x.fullLine)
+			x.writeToDebugLog(outputFileDebugDump)
+		#Print all accessListSubRules - These are each ACE in a ACL broken down into an object
+		outputFileDebugDump.write("=================------------------DUMP listOfAccessLists[] and each accessListSubRuleList[]--------------===================\n")
+		for x in listOfAccessLists:
+			for y in x.accessListSubRuleList:
+				outputFileDebugDump.write("******************\n")
+				outputFileDebugDump.write(y.fullLine)
+				y.writeToDebugLog(outputFileDebugDump)
+		#Print all Prototcol objects in the listOfProtocolObjects[]
+		outputFileDebugDump.write("=================------------------DUMP listOfPortObjects[]--------------===================\n")
+		for x in listOfPortObjects:
+			outputFileDebugDump.write("******************\n")
+			outputFileDebugDump.write(x.fullLine)
+			x.writeToDebugLog(outputFileDebugDump)
+		#Print all Prototcol objects in the listOfProtocolObjects[]
+		outputFileDebugDump.write("=================------------------DUMP listOfIcmpObjects[]--------------===================\n")
+		for x in listOfIcmpObjects:
+			outputFileDebugDump.write("******************\n")
+			outputFileDebugDump.write(x.fullLine)
+			x.writeToDebugLog(outputFileDebugDump)
+		#Print all Prototcol objects in the listOfProtocolObjects[]
+		outputFileDebugDump.write("=================------------------DUMP listOfProtocolObjects[]--------------===================\n")
+		for x in listOfProtocolObjects:
+			outputFileDebugDump.write("******************\n")
+			outputFileDebugDump.write(x.fullLine)
+			x.writeToDebugLog(outputFileDebugDump)
+		#Print all the object groups in the listOfObjectGroups[] 
+		outputFileDebugDump.write("=================------------------DUMP listOfObjectGroups[] One Level--------------===================\n")
+		for x in listOfObjectGroups:
+			outputFileDebugDump.write("******************\n")
+			x.writeToDebugLogDirectItemsOnly(outputFileDebugDump)
+		outputFileDebugDump.write("=================------------------DUMP listOfInterfaces[]---------------======================\n")
+		for x in listOfInterfaces:
+			x.writeToDebugLog(outputFileDebugDump)
+		outputFileDebugDump.write("=================------------------DUMP listOfTunnelGroups[]------------========================\n")
+		for x in listOfTunnelGroups:
+			x.writeToDebugLog(outputFileDebugDump)
 	
 
 	#print "NumberOfObjectGroups ",len(listOfObjectGroups)
@@ -1310,6 +1404,50 @@ def ParseMe(inputFile, options):
 	# print "ICMP Object Count (Unique)= " + str(icmpObjectCount)
 	#print "ACL Line Count = " + str(accessListCount)
 
+	return(listOfAccessGroups,listOfHosts,listOfObjectGroups,listOfServiceObjects,listOfPortObjects,listOfProtocolObjects,listOfIcmpObjects,listOfAccessLists,listOfInterfaces,listOfTunnelGroups)
+
+
+
+def CompareProtocolExpandedLists(list1,list2):
+	set1 = set(list1)
+	set2 = set(list2)
+	if set1 == set2:
+		return 100
+	else:
+		return 0
+
+def CompareSourceIpExpandedLists(list1,list2):
+	set1 = set(list1)
+	set2 = set(list2)
+	if set1 == set2:
+		return 100
+	else:
+		return 0
+	
+def CompareSourcePortExpandedLists(list1,list2):
+	set1 = set(list1)
+	set2 = set(list2)
+	if set1 == set2:
+		return 100
+	else:
+		return 0
+		
+def CompareDestIpExpandedLists(list1,list2):
+	set1 = set(list1)
+	set2 = set(list2)
+	if set1 == set2:
+		return 100
+	else:
+		return 0
+		
+def CompareDestPortExpandedLists(list1,list2):
+	set1 = set(list1)
+	set2 = set(list2)
+	if set1 == set2:
+		return 100
+	else:
+		return 0
+
 
 def main():
 	
@@ -1392,8 +1530,9 @@ def main():
 		pushToSQL = raw_input("Should I push data to SQL DB? y/n :")
 		if pushToSQL == 'y':
 			doSQLStuff = True
+			import MySQLdb #If not libaries not available, we will crash
 		else: doSQLStuff = False
-		getFileFrom = raw_input("Where to get file from? local/remote/rancidlist : ")
+		getFileFrom = raw_input("Where to get file from? local/remote/rancidlist/localcompare : ")
 	elif programMode == 'Local':
 		debugDump = raw_input('do a debug dump? y/n :')
 		if debugDump == 'y':
@@ -1416,7 +1555,18 @@ def main():
 		deviceType = raw_input("Enter Device Type[cisco_asa / cisco_switch: ")
 		options['deviceType'] = deviceType
 		deviceRepoRevisionNumber = 0 
+	if getFileFrom == 'localcompare':
+		input1 = raw_input("Enter local filename one: ")
+                inputFile = open(installedDir+input1 , 'r')
+		options['deviceConfig'] = input1
+		input2 = raw_input("Enter local filename two: ")
+		secondInputFile = open(installedDir+input2 , 'r')
+                options['deviceConfig2'] = input2
+                deviceType = raw_input("Enter Device Type[cisco_asa / cisco_switch: ")
+                options['deviceType'] = deviceType
+                deviceRepoRevisionNumber = 0
 	elif getFileFrom == 'remote':
+		import pysvn #libaries better be available, or we will crash
 		try:
 			svnRepo = configParser.get('SVNconfig','SVNrepo')
 		except:
@@ -1467,11 +1617,222 @@ def main():
 	options['outputFileLogging'] = outputFileLogging	
 	options['installedDir'] = installedDir
 		
-	
-	
 	#Parse the inputFile with the options from the dict
 	if getFileFrom == 'local' or getFileFrom == 'remote':
+		print "Running as local"
 		ParseMe(inputFile, options)
+
+	#Parse the inputFile with the options from the dict
+	if getFileFrom == 'localcompare':
+		print "Running as localcompare"
+		#Line below is the orginal basic parse
+		#ParseMe(inputFile, options)
+		#Changing ParseMe to return multiple lists
+ 		listOfAccessGroups1,listOfHosts1,listOfObjectGroups1,listOfServiceObjects1,listOfPortObjects1,listOfProtocolObjects1,listOfIcmpObjects1,listOfAccessLists1,listOfInterfaces1,listOfTunnelGroups1 = ParseMe(inputFile, options)
+                # Changing options for the second file outputs and inputs
+		outputFile = outputDir+"SECOND-output.txt"
+		outputFileLargeACLs = outputDir+'SECOND-output-LargeACLs.txt'
+		outputFileLargeACLsForCopyAndPaste = outputDir+'SECOND-output-LargeACLs-CopyPaste.txt'
+		outputFileDebugDump = outputDir+'SECOND-debugDump.txt'
+		outputFileLogging = logDir+'SECOND-LogFile.txt'
+		outputFileAclComparisonDebugDump = outputDir+'ACLComparisonDebug.txt'
+		outputFileAclMatchList = outputDir+'ACL_Match_List.txt'
+		outputFileAclNoMatchList = outputDir+'ACL_NO_Match_List.txt'
+		outputFileAcl100MatchList = outputDir+'ACL_100_Match_List_Dump.txt'
+		options['deviceConfig'] = input2
+		#print options['deviceConfig']
+		options['outputFile'] = outputFile
+		options['deviceRepoRevisionNumber'] = deviceRepoRevisionNumber
+		options['outputFileLargeACLs'] = outputFileLargeACLs
+		options['outputFileLargeACLsForCopyAndPaste'] = outputFileLargeACLsForCopyAndPaste
+		options['outputFileDebugDump'] = outputFileDebugDump
+		options['outputFileLogging'] = outputFileLogging
+		options['deviceType'] = deviceType
+		options['installedDir'] = installedDir
+		fileAclComparisonDebugDump = open(outputFileAclComparisonDebugDump,'w')
+		fileAclMatchList = open(outputFileAclMatchList,'w')
+		fileAclNoMatchList = open(outputFileAclNoMatchList,'w')
+		fileAcl100MatchList = open(outputFileAcl100MatchList,'w')
+		listOfAccessGroups2,listOfHosts2,listOfObjectGroups2,listOfServiceObjects2,listOfPortObjects2,listOfProtocolObjects2,listOfIcmpObjects2,listOfAccessLists2,listOfInterfaces2,listOfTunnelGroups2 = ParseMe(secondInputFile, options)		
+		print "Count for listOfAccessGroups: ", len(listOfAccessGroups1)
+		print "Count for listOfHosts: ", len(listOfHosts1)
+		print "Count for listOfObjectGroups: ", len(listOfObjectGroups1)
+		print "Count for listOfServiceObjects: ", len(listOfServiceObjects1)
+		print "Count for listOfPortObjects: ", len(listOfPortObjects1)
+		print "Count for listOfProtocolObjects: ", len(listOfProtocolObjects1)
+		print "Count for listOfIcmpObjects: ", len(listOfIcmpObjects1)
+		print "Count for listOfAccessLists: ", len(listOfAccessLists1)
+		print "Count for listOfInterfaces: ", len(listOfInterfaces1)
+		print "Count for listOfTunnelGroups: ", len(listOfTunnelGroups1)
+		print "Count for listOfAccessGroups2: ", len(listOfAccessGroups2)
+		print "Count for listOfHosts2: ", len(listOfHosts2)
+		print "Count for listOfObjectGroups2: ", len(listOfObjectGroups2)
+		print "Count for listOfServiceObjects2: ", len(listOfServiceObjects2)
+		print "Count for listOfPortObjects2: ", len(listOfPortObjects2)
+		print "Count for listOfProtocolObjects2: ", len(listOfProtocolObjects2)
+		print "Count for listOfIcmpObjects2: ", len(listOfIcmpObjects2)
+		print "Count for listOfAccessLists2: ", len(listOfAccessLists2)
+		print "Count for listOfInterfaces2: ", len(listOfInterfaces2)
+		print "Count for listOfTunnelGroups2: ", len(listOfTunnelGroups2)
+
+		print "---===BEGIN ACL COMPARISON===---"
+		
+		primaryConfigACL = ''
+		secondaryConfigACL = ''
+		for x in listOfAccessLists1:
+			primaryConfigACL = primaryConfigACL + x.name + " "
+		for x in listOfAccessLists2:
+			secondaryConfigACL = secondaryConfigACL + x.name + " "
+		print("ACL Choices on Primary Config: " + primaryConfigACL)
+		input3 = raw_input("Enter Primary Config ACL to compare with: ")
+		print("ACL Choices on Secondary Config: " + secondaryConfigACL)
+		input4 = raw_input("Enter Secondary Config ACL to compare against Primary: ")
+		aceMatchList = []
+		aceNoMatchList = []
+		primaryACL = []
+		secondaryACL = []
+		for x in listOfAccessLists1:
+			if x.name == input3:
+				primaryACL = x
+		for x in listOfAccessLists2:
+			if x.name == input4:
+				secondaryACL = x
+				
+		#TEMP REMOVE LATER
+		#for aceOneTemp in primaryACL.accessListSubRuleList:
+		#	print "(DUMP PRIMARY ACL)AceOneTemp= " + aceOneTemp.fullLine
+		#for aceTwoTemp in secondaryACL.accessListSubRuleList:
+		#	print "(DUMP SECONDARY ACL)AceTwoTemp= " + aceTwoTemp.fullLine	
+		
+		#Start comparing all the ACLs to each other	
+		for aceOneTemp in primaryACL.accessListSubRuleList:
+			#for aceTwoTemp in aceMatchList:
+			#print "(outerloop)AceOneTemp= " + aceOneTemp.fullLine
+			#GO AWAY for aceTwoTemp in aceNoMatchList:
+			i = 0
+			while i < len(aceNoMatchList):
+				aceTwoTemp = aceNoMatchList[i]
+				#print "(innerLoop)(aceNoMatchList)AceTwoTemp= " + aceTwoTemp.fullLine
+				protocolCompareValue = CompareProtocolExpandedLists(aceOneTemp.protocol_expanded,aceTwoTemp.protocol_expanded)
+				sourceIpCompareValue = CompareSourceIpExpandedLists(aceOneTemp.source_ip_expanded,aceTwoTemp.source_ip_expanded)
+				sourcePortCompareValue = 100  #Forcing a match until I verify soure port extractions
+				#sourcePortCompareValue = CompareSourcePortExpandedLists(aceOneTemp.source_port_expanded,aceTwoTemp.source_port_expanded) #STUB OR COMMENT THIS
+				destIpCompareValue = CompareDestIpExpandedLists(aceOneTemp.dest_ip_expanded,aceTwoTemp.dest_ip_expanded)
+				destPortCompareValue = CompareDestPortExpandedLists(aceOneTemp.dest_port_expanded,aceTwoTemp.dest_port_expanded)
+				#Combine the values for a total match value
+				totalMatchValue = (protocolCompareValue + sourceIpCompareValue + sourcePortCompareValue + destIpCompareValue + destPortCompareValue) / 5
+				if doDebugDump == True:
+					fileAclComparisonDebugDump.write("---===ACL COMPARISON TESTING===---\n")
+					fileAclComparisonDebugDump.write("*****COMPARING SUMMARY BELOW*****\n")
+					fileAclComparisonDebugDump.write("I'M IN THE NO MATCH LIST\n")
+					fileAclComparisonDebugDump.write("Primary Config ACE  : "+ aceOneTemp.fullLine)
+					fileAclComparisonDebugDump.write("Secondary Config ACE: " + aceTwoTemp.fullLine)
+					fileAclComparisonDebugDump.write("protocolCompareValue: " + str(protocolCompareValue) + "\n")
+					fileAclComparisonDebugDump.write("sourceIpCompareValue: " + str(sourceIpCompareValue) + "\n")
+					fileAclComparisonDebugDump.write("sourcePortCompareValue: " + str(sourcePortCompareValue) + "\n")
+					fileAclComparisonDebugDump.write("destIpCompareValue: " + str(destIpCompareValue) + "\n")
+					fileAclComparisonDebugDump.write("destPortCompareValue" + str(destPortCompareValue) + "\n")
+					fileAclComparisonDebugDump.write("totalMatchValue" + str(totalMatchValue) + "\n")
+
+				#print "*****COMPARING SUMMARY BELOW*****"
+				#print "I'M IN THE NO MATCH LIST"
+				#print "Primary Config ACE  : ", aceOneTemp.fullLine
+				#print "Secondary Config ACE: ",aceTwoTemp.fullLine
+				#print "protocolCompareValue: ",protocolCompareValue
+				#print "sourceIpCompareValue: " , sourceIpCompareValue
+				#print "sourcePortCompareValue: " , sourcePortCompareValue
+				#print "destIpCompareValue: " ,destIpCompareValue
+				#print "destPortCompareValue" , destPortCompareValue
+				#print "totalMatchValue" , totalMatchValue
+				if totalMatchValue == 100:
+					fileAcl100MatchList.write("******MATCHING PAIR BELOW*****\n")
+					fileAcl100MatchList.write("Primary ACE  : "+ aceOneTemp.fullLine)
+					fileAcl100MatchList.write("Secondary ACe: "+ aceTwoTemp.fullLine)
+					#Do Match stuff. Move ACE from No Match list to Match list
+					#print "MATCH!"
+					aceMatchList.append(aceTwoTemp)
+					aceNoMatchList.remove(aceTwoTemp)
+					#DONT increment i
+				elif totalMatchValue < 100:
+					i += 1
+					#print "NO MATCH!"
+						#Do Nothing since its already in the No Match List
+					1 == 1  #Just a placeholder
+				else:
+					i += 1
+					#Do A default case
+				#	print "DEFAULT CASE!"
+					1 == 1  #Just a placeholder
+			#for aceTwoTemp in secondaryACL.accessListSubRuleList: #Compare to the Starting list
+			i = 0
+			while i < len(secondaryACL.accessListSubRuleList):
+				aceTwoTemp = secondaryACL.accessListSubRuleList[i]
+				#print "(innerLoop)(secondarACL)AceTwoTemp= " + aceTwoTemp.fullLine
+				protocolCompareValue = CompareProtocolExpandedLists(aceOneTemp.protocol_expanded,aceTwoTemp.protocol_expanded)
+				sourceIpCompareValue = CompareSourceIpExpandedLists(aceOneTemp.source_ip_expanded,aceTwoTemp.source_ip_expanded)
+				sourcePortCompareValue = 100  #Forcing a match until I verify soure port extractions
+				#sourcePortCompareValue = CompareSourcePortExpandedLists(aceOneTemp.source_port_expanded,aceTwoTemp.source_port_expanded) #STUB OR COMMENT THIS
+				destIpCompareValue = CompareDestIpExpandedLists(aceOneTemp.dest_ip_expanded,aceTwoTemp.dest_ip_expanded)
+				destPortCompareValue = CompareDestPortExpandedLists(aceOneTemp.dest_port_expanded,aceTwoTemp.dest_port_expanded)
+				#Combine the values for a total match value
+				totalMatchValue = (protocolCompareValue + sourceIpCompareValue + sourcePortCompareValue + destIpCompareValue + destPortCompareValue) / 5
+				if doDebugDump == True:
+					fileAclComparisonDebugDump.write("---===ACL COMPARISON TESTING===---\n")
+					fileAclComparisonDebugDump.write("*****COMPARING SUMMARY BELOW*****\n")
+					fileAclComparisonDebugDump.write("I'M IN THE SECONDARY LIST\n")
+					fileAclComparisonDebugDump.write("Primary Config ACE   :"+ aceOneTemp.fullLine)
+					fileAclComparisonDebugDump.write("Secondary Config ACE: " + aceTwoTemp.fullLine)
+					fileAclComparisonDebugDump.write("protocolCompareValue: "+ str(protocolCompareValue) + "\n")
+					fileAclComparisonDebugDump.write("sourceIpCompareValue: " + str(sourceIpCompareValue) + "\n")
+					fileAclComparisonDebugDump.write("sourcePortCompareValue: " + str(sourcePortCompareValue) + "\n")
+					fileAclComparisonDebugDump.write("destIpCompareValue: " + str(destIpCompareValue) + "\n")
+					fileAclComparisonDebugDump.write("destPortCompareValue" + str(destPortCompareValue) + "\n")
+					fileAclComparisonDebugDump.write("totalMatchValue" + str(totalMatchValue) + "\n")				
+				#print "*****COMPARING SUMMARY BELOW*****"
+				#print "ACE's in the secondaryACL List: ", len(secondaryACL.accessListSubRuleList)
+				#print "IM IN THE SECONDARYACL LIST"
+				#print "Primary Config ACE: ", aceOneTemp.fullLine
+				#print "Secondary Config ACE: ",aceTwoTemp.fullLine
+				#print "protocolCompareValue: ",protocolCompareValue
+				#print "sourceIpCompareValue: " , sourceIpCompareValue
+				#print "sourcePortCompareValue: " , sourcePortCompareValue
+				#print "destIpCompareValue: " ,destIpCompareValue
+				#print "destPortCompareValue" , destPortCompareValue
+				#print "totalMatchValue" , totalMatchValue
+				if totalMatchValue == 100:
+					fileAcl100MatchList.write("******MATCHING PAIR BELOW*****\n")
+                                        fileAcl100MatchList.write("Primary ACE  : "+ aceOneTemp.fullLine)
+                                        fileAcl100MatchList.write("Secondary ACE: "+ aceTwoTemp.fullLine)
+					#print "MATCH!"
+					#Do Match stuff. Move ACE from starting list to Match list
+					aceMatchList.append(aceTwoTemp)
+					secondaryACL.accessListSubRuleList.remove(aceTwoTemp)
+				elif totalMatchValue < 100:
+					#print "NO MATCH!"
+					#Do NO Match stuff
+					aceNoMatchList.append(aceTwoTemp)
+					secondaryACL.accessListSubRuleList.remove(aceTwoTemp)
+				else:
+					i += 1
+					#print "DEFAULT CASE!"
+					#Do A default case
+					1 == 1  #Just a placeholder
+		
+		print "ACE's in the Match List: ", len(aceMatchList)
+		print "ACE's in the NO Match List: ", len(aceNoMatchList)
+		print "ACE's in the secondaryACL List: ", len(secondaryACL.accessListSubRuleList)
+		print "ACE's in the primaryACL: ", len(primaryACL.accessListSubRuleList)	
+		#print "***aceMatchList***"
+		fileAclMatchList.write("*** ACE MATCH LIST ***\n")
+		for x in aceMatchList:
+			#print x.fullLine
+			fileAclMatchList.write(x.fullLine)
+		#print "***aceNoMatchList***"
+		fileAclNoMatchList.write("*** ACE NO MATCH LIST ***\n")
+		for x in aceNoMatchList:
+			#print x.fullLine	
+			fileAclNoMatchList.write(x.fullLine)
+
 	if getFileFrom == 'rancidlist':
 		try:
 			svnRepo = configParser.get('SVNconfig','SVNrepo')
