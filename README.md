@@ -7,8 +7,8 @@ To parse though Cisco IOS and ASA configs to pull information out and into a tex
 
 Very little exception catching :)
 
-WARNING-You MUST have values for all values in the confi.ini (even if they are gibberish)
-WARNING-The file needs to be Cisco formatted. Extra blank lines can be an issue. Some config backup programs add extra lines to the beginning or end of the file. Haven't gotten around to accounting for those issues.
+WARNING-You MUST have values for all values in the confi.ini (even if they are gibberish)<br />
+WARNING-The file needs to be Cisco formatted. Extra blank lines can be an issue. Some config backup programs add extra lines to the beginning or end of the file. Haven't gotten around to accounting for those issues.<br />
 
 Required configuration file in same location as main.py = conf.ini
 ```
