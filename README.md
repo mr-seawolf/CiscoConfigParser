@@ -5,15 +5,15 @@ CiscoConfigParser
 
 To parse though Cisco IOS and ASA configs to pull information out and into a text file or DB.
 
-Zero Exception catching :)
+Very little exception catching :)
 
-
-WARNING-VIEW RAW TO LOOK AT CONFIG EXAMPLE.
-
+WARNING-You MUST have values for all values in the confi.ini (even if they are gibberish)
+WARNING-The file needs to be Cisco formatted. Extra blank lines can be an issue. Some config backup programs add extra lines to the beginning or end of the file. Haven't gotten around to accounting for those issues.
 
 Required configuration file in same location as main.py = conf.ini
+```
 [Basic]
-#Mode Options
+#Mode Options - Just use "All" for now. Work in progress
 #All = Ask alot of questions
 #Local = All Local All the time
 Mode=All
@@ -35,4 +35,4 @@ SVNrealm=EXAMPLE.COM
 SVNrepo=https://svn.example.com/example/CVS/networking/configs/
 SVNuser=examplesvnuser
 SVNpassword=examplesvnpassword
-
+```
