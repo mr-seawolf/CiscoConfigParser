@@ -24,14 +24,15 @@ from  AccessGroup import *
 from  InterfaceObject import *
 from  TunnelGroupObject import *
 from CryptoMapObject import *
+from DeviceObject import *
 from operator import pos
 
 
 def ParseMe(inputFile, options):
 	#This are the Commands for Cisco ASA Firewalls
 	listOfCommands = ['hostname', 'name', 'interface', 'object-group', 'network-object', 'description', 'service-object', 'port-object', 'group-object', 'access-list', 'nat', 'static', \
-					 'access-group', 'crypto','domain-name','protocol-object','icmp-object', 'object', 'subnet', 'host', 'service','tunnel-group','default-group-policy','nat']
-	listOfCiscoSwitchCommands = ['hostname', 'interface', 'switchport', 'spanning-tree']
+					 'access-group', 'crypto','domain-name','protocol-object','icmp-object', 'object', 'subnet', 'host', 'service','tunnel-group','default-group-policy','ntp']
+	listOfCiscoSwitchCommands = ['hostname', 'interface', 'switchport', 'spanning-tree', 'nat','ntp']
 	StartOfNewCommandObject = True
 	linesIgnored = 0
 	linesProcessed = 0
@@ -96,6 +97,7 @@ def ParseMe(inputFile, options):
 	deviceRepoRevisionNumber = options['deviceRepoRevisionNumber']
 	getFileFrom = options['getFileFrom']
 	deviceType = options['deviceType']
+	installedDir = options['installedDir']
 	
 	#This will return a list[] of a ACL line expanded to every combination. It can be rather large
 	#list contains entries like: access-list outside_access_in extended permit tcp 192.168.101.0 255.255.255.0 10.150.130.144 255.255.255.255  eq https
@@ -524,7 +526,13 @@ def ParseMe(inputFile, options):
 						listOfHosts[pos].setNatLineNum(natLineNum)
 					else:
 						pos += 1
-										
+		
+		elif commandName == 'ntp':
+			#Temp ghetto job, dump to a file for ntp config lines
+			outputNTPFile = open(installedDir+"NTPsettings", 'a')
+			outputNTPFile.write(hostname[0] +" " + line)	
+			
+											
 	# When parsing through the lines we need to check if the line starts with whitespace or not
 	
 	
@@ -1457,7 +1465,7 @@ def main():
 	options['outputFileLargeACLsForCopyAndPaste'] = outputFileLargeACLsForCopyAndPaste
 	options['outputFileDebugDump'] = outputFileDebugDump
 	options['outputFileLogging'] = outputFileLogging	
-	
+	options['installedDir'] = installedDir
 		
 	
 	
