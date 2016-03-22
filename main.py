@@ -1639,6 +1639,8 @@ def main():
 		outputFileAclMatchList = outputDir+'ACL_Match_List.txt'
 		outputFileAclNoMatchList = outputDir+'ACL_NO_Match_List.txt'
 		outputFileAcl100MatchList = outputDir+'ACL_100_Match_List_Dump.txt'
+		outputFileReqObjectGroupDebugDump = outputDir+'ReqObjectGroupDebug.txt'
+		outputFileReqObjectGroupCopyPaste = outputDir+'ReqObjectGroupCopyPaste.txt'
 		options['deviceConfig'] = input2
 		#print options['deviceConfig']
 		options['outputFile'] = outputFile
@@ -1653,6 +1655,8 @@ def main():
 		fileAclMatchList = open(outputFileAclMatchList,'w')
 		fileAclNoMatchList = open(outputFileAclNoMatchList,'w')
 		fileAcl100MatchList = open(outputFileAcl100MatchList,'w')
+		fileReqObjectGroupDebugDump = open(outputFileReqObjectGroupDebugDump,'w')
+		fileReqObjectGroupCopyPaste = open(outputFileReqObjectGroupCopyPaste,'w')
 		listOfAccessGroups2,listOfHosts2,listOfObjectGroups2,listOfServiceObjects2,listOfPortObjects2,listOfProtocolObjects2,listOfIcmpObjects2,listOfAccessLists2,listOfInterfaces2,listOfTunnelGroups2 = ParseMe(secondInputFile, options)		
 		print "Count for listOfAccessGroups: ", len(listOfAccessGroups1)
 		print "Count for listOfHosts: ", len(listOfHosts1)
@@ -1832,7 +1836,116 @@ def main():
 		for x in aceNoMatchList:
 			#print x.fullLine	
 			fileAclNoMatchList.write(x.fullLine)
+#Go through the aceNoMatchList to find required Object Groups for a copy and paste config
+		setOfRequiredObjects = set()
+		for tempACE in aceNoMatchList:	
+			#Check if Protocol section is an Object Group
+			if tempACE.protocolIsOG == True:
+				setOfRequiredObjects.add(tempACE.protocol)
+			elif  tempACE.protocolIsO == True:
+				#DO SOMETHING, This might only matter before version 9
+				setOfRequiredObjects.add(tempACE.protocol)
+			#Check if Source section is an Object Group
+			if  tempACE.sourceIsOG == True:
+				setOfRequiredObjects.add(tempACE.source)
+			elif  tempACE.sourceIsO == True:
+				#DO SOMETHING, This might only matter before version 9
+				setOfRequiredObjects.add(tempACE.source)
+			#Check if Source Port section is an Object Group
+			if  tempACE.source_portIsOG == True:
+				#DO SOMETHING
+				setOfRequiredObjects.add(tempACE.source_port)
+			elif  tempACE.source_portIsO == True:
+				setOfRequiredObjects.add(tempACE.source_port)
+			#Check if Dest section is an Object Group
+			if  tempACE.destIsOG == True:
+				#DO SOMETHING
+				setOfRequiredObjects.add(tempACE.dest)
+			elif  tempACE.destIsO == True:
+				#DO SOMETHING, This might only matter before version 9
+				setOfRequiredObjects.add(tempACE.dest)
+			#Check if Dest port is an Object Group
+			if  tempACE.dest_portIsOG == True:
+				#DO SOMETHING
+				setOfRequiredObjects.add(tempACE.dest_port)
+			elif  tempACE.dest_portIsO == True:
+				#DO SOMETHING, This might only matter before version 9
+				setOfRequiredObjects.add(tempACE.dest_port)
+		print "REQUIRED OBJECTS"
+		for x in setOfRequiredObjects:
+		 print x
 
+#x is just a name, so we have to retrieive the object from the listOfObjectGroups2
+		for x in setOfRequiredObjects:
+			if doDebugDump == True:
+				fileReqObjectGroupDebugDump.write("****Name of Object in Req List= "+x+"\n")
+			#Find the object in listOfObjectGroups2 named x
+			for y in listOfObjectGroups2:
+				if x == y.name:
+					hasSubGroups = False #Sub Object groups have to be before object groups that contain them
+					if doDebugDump == True:
+						fileReqObjectGroupDebugDump.write("Name of retreived object " + y.name + "\n")
+						fileReqObjectGroupDebugDump.write("listOfNetworkObjects Length: "+str(len(y.listOfNetworkObjects))+"\n")
+						fileReqObjectGroupDebugDump.write("listOfServiceObjects Length: "+str(len(y.listOfServiceObjects))+"\n")
+						fileReqObjectGroupDebugDump.write("listOfObjectGroups Length: "+str(len(y.listOfObjectGroups))+"\n")
+						fileReqObjectGroupDebugDump.write("listOfIcmpObjects Length: "+str(len(y.listOfIcmpObjects))+"\n")
+						fileReqObjectGroupDebugDump.write("listOfPortObjects Length: "+str(len(y.listOfPortObjects))+"\n")
+						fileReqObjectGroupDebugDump.write("listOfProtocolObjects Length: "+str(len(y.listOfProtocolObjects))+"\n")
+					#If the group has sub groups, make note of that
+					if len(y.listOfObjectGroups) > 0:
+						hasSubGroups == True
+					#If a Network Object write it out
+					if len(y.listOfNetworkObjects) > 0:
+						fileReqObjectGroupCopyPaste.write("object-group network "+y.name+"\n")
+						if doDebugDump == True:
+							fileReqObjectGroupDebugDump.write("object-group network "+y.name+"\n")
+						for z in y.listOfNetworkObjects:
+							fileReqObjectGroupCopyPaste.write(z.fullLine)
+							if doDebugDump == True:
+								fileReqObjectGroupDebugDump.write(z.fullLine)
+					if len(y.listOfServiceObjects) > 0:
+						fileReqObjectGroupCopyPaste.write("object-group service "+y.name+"\n")
+						if doDebugDump == True:
+							fileReqObjectGroupDebugDump.write("object-group service "+y.name+"\n")
+						for z in y.listOfServiceObjects:
+							fileReqObjectGroupCopyPaste.write(z.fullLine)
+							if doDebugDump == True:
+								fileReqObjectGroupDebugDump.write(z.fullLine)
+					if len(y.listOfIcmpObjects) > 0:
+						fileReqObjectGroupCopyPaste.write("object-group icmp-type "+y.name+"\n")
+						if doDebugDump == True:
+							fileReqObjectGroupDebugDump.write("object-group icmp-type "+y.name+"\n")
+						for z in y.listOfIcmpObjects:
+							fileReqObjectGroupCopyPaste.write(z.fullLine)
+							if doDebugDump == True:
+								fileReqObjectGroupDebugDump.write(z.fullLine)
+					if len(y.listOfPortObjects) > 0:
+						fileReqObjectGroupCopyPaste.write("object-group service "+y.name+"\n")
+						if doDebugDump == True:
+							fileReqObjectGroupDebugDump.write("object-group service "+y.name+"\n")
+						for z in y.listOfPortObjects:
+							fileReqObjectGroupCopyPaste.write(z.fullLine)
+							if doDebugDump == True:
+								fileReqObjectGroupDebugDump.write(z.fullLine)
+					if len(y.listOfProtocolObjects) > 0:
+						fileReqObjectGroupCopyPaste.write("object-group protocol "+y.name+"\n")
+						if doDebugDump == True:
+							fileReqObjectGroupDebugDump.write("object-group protocol "+y.name+"\n")
+						for z in y.listOfProtocolObjects:
+							fileReqObjectGroupCopyPaste.write(z.fullLine)
+							if doDebugDump == True:
+								fileReqObjectGroupDebugDump.write(z.fullLine)
+					#Add Sub groups to the object group
+                                        if len(y.listOfObjectGroups) > 0:
+                                                for z in y.listOfObjectGroups:
+							fileReqObjectGroupCopyPaste.write(" group-object "+z+"\n")
+							if doDebugDump == True:
+                                                        	fileReqObjectGroupDebugDump.write(" group-object "+z+"\n")
+					#Must end in an exit for copy and past to work
+					if doDebugDump == True:
+						fileReqObjectGroupCopyPaste.write("exit\n")
+						fileReqObjectGroupDebugDump.write("exit\n")
+#Control stuff for text menu
 	if getFileFrom == 'rancidlist':
 		try:
 			svnRepo = configParser.get('SVNconfig','SVNrepo')
