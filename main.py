@@ -1448,6 +1448,11 @@ def CompareDestPortExpandedLists(list1,list2):
 	else:
 		return 0
 
+def CompareRuleType(aceOne,aceTwo):
+	if aceOne.typeOfAccess == aceTwo.typeOfAccess:
+		return 100
+	else:
+		return 0
 
 def main():
 	
@@ -1723,8 +1728,9 @@ def main():
 				#sourcePortCompareValue = CompareSourcePortExpandedLists(aceOneTemp.source_port_expanded,aceTwoTemp.source_port_expanded) #STUB OR COMMENT THIS
 				destIpCompareValue = CompareDestIpExpandedLists(aceOneTemp.dest_ip_expanded,aceTwoTemp.dest_ip_expanded)
 				destPortCompareValue = CompareDestPortExpandedLists(aceOneTemp.dest_port_expanded,aceTwoTemp.dest_port_expanded)
+				typeOfAccessCompareValue = CompareRuleType(aceOneTemp,aceTwoTemp)
 				#Combine the values for a total match value
-				totalMatchValue = (protocolCompareValue + sourceIpCompareValue + sourcePortCompareValue + destIpCompareValue + destPortCompareValue) / 5
+				totalMatchValue = (protocolCompareValue + sourceIpCompareValue + sourcePortCompareValue + destIpCompareValue + destPortCompareValue + typeOfAccessCompareValue) / 6
 				if doDebugDump == True:
 					fileAclComparisonDebugDump.write("---===ACL COMPARISON TESTING===---\n")
 					fileAclComparisonDebugDump.write("*****COMPARING SUMMARY BELOW*****\n")
@@ -1736,6 +1742,7 @@ def main():
 					fileAclComparisonDebugDump.write("sourcePortCompareValue: " + str(sourcePortCompareValue) + "\n")
 					fileAclComparisonDebugDump.write("destIpCompareValue: " + str(destIpCompareValue) + "\n")
 					fileAclComparisonDebugDump.write("destPortCompareValue" + str(destPortCompareValue) + "\n")
+					fileAclComparisonDebugDump.write("typeOfAccessCompareValue" + str(typeOfAccessCompareValue) + "\n")
 					fileAclComparisonDebugDump.write("totalMatchValue" + str(totalMatchValue) + "\n")
 
 				#print "*****COMPARING SUMMARY BELOW*****"
@@ -1747,6 +1754,7 @@ def main():
 				#print "sourcePortCompareValue: " , sourcePortCompareValue
 				#print "destIpCompareValue: " ,destIpCompareValue
 				#print "destPortCompareValue" , destPortCompareValue
+				#print "typeOfAccessCompareValue" , typeOfAccessCompareValue
 				#print "totalMatchValue" , totalMatchValue
 				if totalMatchValue == 100:
 					fileAcl100MatchList.write("******MATCHING PAIR BELOW*****\n")
@@ -1778,8 +1786,9 @@ def main():
 				#sourcePortCompareValue = CompareSourcePortExpandedLists(aceOneTemp.source_port_expanded,aceTwoTemp.source_port_expanded) #STUB OR COMMENT THIS
 				destIpCompareValue = CompareDestIpExpandedLists(aceOneTemp.dest_ip_expanded,aceTwoTemp.dest_ip_expanded)
 				destPortCompareValue = CompareDestPortExpandedLists(aceOneTemp.dest_port_expanded,aceTwoTemp.dest_port_expanded)
+				typeOfAccessCompareValue = CompareRuleType(aceOneTemp,aceTwoTemp)
 				#Combine the values for a total match value
-				totalMatchValue = (protocolCompareValue + sourceIpCompareValue + sourcePortCompareValue + destIpCompareValue + destPortCompareValue) / 5
+				totalMatchValue = (protocolCompareValue + sourceIpCompareValue + sourcePortCompareValue + destIpCompareValue + destPortCompareValue + typeOfAccessCompareValue) / 6
 				if doDebugDump == True:
 					fileAclComparisonDebugDump.write("---===ACL COMPARISON TESTING===---\n")
 					fileAclComparisonDebugDump.write("*****COMPARING SUMMARY BELOW*****\n")
@@ -1791,6 +1800,7 @@ def main():
 					fileAclComparisonDebugDump.write("sourcePortCompareValue: " + str(sourcePortCompareValue) + "\n")
 					fileAclComparisonDebugDump.write("destIpCompareValue: " + str(destIpCompareValue) + "\n")
 					fileAclComparisonDebugDump.write("destPortCompareValue" + str(destPortCompareValue) + "\n")
+					fileAclComparisonDebugDump.write("typeOfAccessCompareValue" + str(typeOfAccessCompareValue) + "\n")
 					fileAclComparisonDebugDump.write("totalMatchValue" + str(totalMatchValue) + "\n")				
 				#print "*****COMPARING SUMMARY BELOW*****"
 				#print "ACE's in the secondaryACL List: ", len(secondaryACL.accessListSubRuleList)
@@ -1802,6 +1812,7 @@ def main():
 				#print "sourcePortCompareValue: " , sourcePortCompareValue
 				#print "destIpCompareValue: " ,destIpCompareValue
 				#print "destPortCompareValue" , destPortCompareValue
+				#print "typeOfAccessCompareValue" , typeOfAccessCompareValue
 				#print "totalMatchValue" , totalMatchValue
 				if totalMatchValue == 100:
 					fileAcl100MatchList.write("******MATCHING PAIR BELOW*****\n")
@@ -1871,9 +1882,9 @@ def main():
 			elif  tempACE.dest_portIsO == True:
 				#DO SOMETHING, This might only matter before version 9
 				setOfRequiredObjects.add(tempACE.dest_port)
-		print "REQUIRED OBJECTS"
-		for x in setOfRequiredObjects:
-		 print x
+		#print "REQUIRED OBJECTS"
+		#for x in setOfRequiredObjects:
+		 #print x
 
 #x is just a name, so we have to retrieive the object from the listOfObjectGroups2
 		for x in setOfRequiredObjects:
