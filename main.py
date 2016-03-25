@@ -1454,6 +1454,96 @@ def CompareRuleType(aceOne,aceTwo):
 	else:
 		return 0
 
+def printCopyAndPasteOfSingleObject(fileWrite,fileWriteDebug,object,boolean):
+	doDebugDump = boolean
+	fileReqObjectGroupDebugDump = fileWriteDebug
+	fileReqObjectGroupCopyPaste = fileWrite
+	y = object
+	if doDebugDump == True:
+		fileReqObjectGroupDebugDump.write("Name of retreived object " + y.name + "\n")
+		fileReqObjectGroupDebugDump.write("listOfNetworkObjects Length: "+str(len(y.listOfNetworkObjects))+"\n")
+		fileReqObjectGroupDebugDump.write("listOfServiceObjects Length: "+str(len(y.listOfServiceObjects))+"\n")
+		fileReqObjectGroupDebugDump.write("listOfObjectGroups Length: "+str(len(y.listOfObjectGroups))+"\n")
+		fileReqObjectGroupDebugDump.write("listOfIcmpObjects Length: "+str(len(y.listOfIcmpObjects))+"\n")
+		fileReqObjectGroupDebugDump.write("listOfPortObjects Length: "+str(len(y.listOfPortObjects))+"\n")
+		fileReqObjectGroupDebugDump.write("listOfProtocolObjects Length: "+str(len(y.listOfProtocolObjects))+"\n")
+		#If the group has sub groups, make note of that
+		#if len(y.listOfObjectGroups) > 0:
+		#	hasSubGroups == True
+		#If a Network Object write it out
+		fileReqObjectGroupCopyPaste.write("object-group "+ y.typeOfObjectGroup+" "+ y.name+"\n")
+      	        if doDebugDump == True:
+              		fileReqObjectGroupDebugDump.write("object-group "+y.typeOfObjectGroup+" "+y.name+"\n")
+		if len(y.listOfNetworkObjects) > 0:
+			#fileReqObjectGroupCopyPaste.write("object-group network "+y.name+"\n")
+			#if doDebugDump == True:
+			#	fileReqObjectGroupDebugDump.write("object-group network "+y.name+"\n")
+			for z in y.listOfNetworkObjects:
+				fileReqObjectGroupCopyPaste.write(z.fullLine)
+				if doDebugDump == True:
+					fileReqObjectGroupDebugDump.write(z.fullLine)
+		if len(y.listOfServiceObjects) > 0:
+			#fileReqObjectGroupCopyPaste.write("object-group service "+y.name+"\n")
+			#if doDebugDump == True:
+			#	fileReqObjectGroupDebugDump.write("object-group service "+y.name+"\n")
+			for z in y.listOfServiceObjects:
+				fileReqObjectGroupCopyPaste.write(z.fullLine)
+				if doDebugDump == True:
+					fileReqObjectGroupDebugDump.write(z.fullLine)
+		if len(y.listOfIcmpObjects) > 0:
+			#fileReqObjectGroupCopyPaste.write("object-group icmp-type "+y.name+"\n")
+			#if doDebugDump == True:
+			#	fileReqObjectGroupDebugDump.write("object-group icmp-type "+y.name+"\n")
+			for z in y.listOfIcmpObjects:
+				fileReqObjectGroupCopyPaste.write(z.fullLine)
+				if doDebugDump == True:
+					fileReqObjectGroupDebugDump.write(z.fullLine)
+		if len(y.listOfPortObjects) > 0:
+			#fileReqObjectGroupCopyPaste.write("object-group service "+y.name+"\n")
+			#if doDebugDump == True:
+			#	fileReqObjectGroupDebugDump.write("object-group service "+y.name+"\n")
+			for z in y.listOfPortObjects:
+				fileReqObjectGroupCopyPaste.write(z.fullLine)
+				if doDebugDump == True:
+					fileReqObjectGroupDebugDump.write(z.fullLine)
+		if len(y.listOfProtocolObjects) > 0:
+			#fileReqObjectGroupCopyPaste.write("object-group protocol "+y.name+"\n")
+			#if doDebugDump == True:
+			#	fileReqObjectGroupDebugDump.write("object-group protocol "+y.name+"\n")
+			for z in y.listOfProtocolObjects:
+				fileReqObjectGroupCopyPaste.write(z.fullLine)
+				if doDebugDump == True:
+					fileReqObjectGroupDebugDump.write(z.fullLine)
+		#Add Sub groups to the object group
+		if len(y.listOfObjectGroups) > 0:
+			for z in y.listOfObjectGroups:
+				fileReqObjectGroupCopyPaste.write(" group-object "+z+"\n")
+				if doDebugDump == True:
+					fileReqObjectGroupDebugDump.write(" group-object "+z+"\n")
+		#Must end in an exit for copy and past to work
+		if doDebugDump == True:
+			fileReqObjectGroupCopyPaste.write("exit\n")
+			fileReqObjectGroupDebugDump.write("exit\n")
+	
+def printCopyAndPasteOfObject(name,allObjectGroups,allPrintedObjects,fileWrite,fileWriteDebug,doDebugDump):
+	for x in allObjectGroups:
+		if x.name == name:
+			break
+	#IF has object groups cycle through them.
+	if len(x.listOfObjectGroups)>0:
+		for t in x.listOfObjectGroups:
+			for r in allObjectGroups:
+				if r.name == t:
+					printCopyAndPasteOfObject(t,allObjectGroups,allPrintedObjects,fileWrite,fileWriteDebug,doDebugDump)
+	#elif : #Has no object groups so we hit bottom, so print me
+	if name not in allPrintedObjects:
+		printCopyAndPasteOfSingleObject(fileWrite,fileWriteDebug,x,doDebugDump)
+		allPrintedObjects.add(name)
+			
+
+
+
+
 def main():
 	
 	
@@ -1887,75 +1977,15 @@ def main():
 		 #print x
 
 #x is just a name, so we have to retrieive the object from the listOfObjectGroups2
+		allPrintedObjects = set()
 		for x in setOfRequiredObjects:
 			if doDebugDump == True:
 				fileReqObjectGroupDebugDump.write("****Name of Object in Req List= "+x+"\n")
-			#Find the object in listOfObjectGroups2 named x
-			for y in listOfObjectGroups2:
-				if x == y.name:
-					hasSubGroups = False #Sub Object groups have to be before object groups that contain them
-					if doDebugDump == True:
-						fileReqObjectGroupDebugDump.write("Name of retreived object " + y.name + "\n")
-						fileReqObjectGroupDebugDump.write("listOfNetworkObjects Length: "+str(len(y.listOfNetworkObjects))+"\n")
-						fileReqObjectGroupDebugDump.write("listOfServiceObjects Length: "+str(len(y.listOfServiceObjects))+"\n")
-						fileReqObjectGroupDebugDump.write("listOfObjectGroups Length: "+str(len(y.listOfObjectGroups))+"\n")
-						fileReqObjectGroupDebugDump.write("listOfIcmpObjects Length: "+str(len(y.listOfIcmpObjects))+"\n")
-						fileReqObjectGroupDebugDump.write("listOfPortObjects Length: "+str(len(y.listOfPortObjects))+"\n")
-						fileReqObjectGroupDebugDump.write("listOfProtocolObjects Length: "+str(len(y.listOfProtocolObjects))+"\n")
-					#If the group has sub groups, make note of that
-					if len(y.listOfObjectGroups) > 0:
-						hasSubGroups == True
-					#If a Network Object write it out
-					if len(y.listOfNetworkObjects) > 0:
-						fileReqObjectGroupCopyPaste.write("object-group network "+y.name+"\n")
-						if doDebugDump == True:
-							fileReqObjectGroupDebugDump.write("object-group network "+y.name+"\n")
-						for z in y.listOfNetworkObjects:
-							fileReqObjectGroupCopyPaste.write(z.fullLine)
-							if doDebugDump == True:
-								fileReqObjectGroupDebugDump.write(z.fullLine)
-					if len(y.listOfServiceObjects) > 0:
-						fileReqObjectGroupCopyPaste.write("object-group service "+y.name+"\n")
-						if doDebugDump == True:
-							fileReqObjectGroupDebugDump.write("object-group service "+y.name+"\n")
-						for z in y.listOfServiceObjects:
-							fileReqObjectGroupCopyPaste.write(z.fullLine)
-							if doDebugDump == True:
-								fileReqObjectGroupDebugDump.write(z.fullLine)
-					if len(y.listOfIcmpObjects) > 0:
-						fileReqObjectGroupCopyPaste.write("object-group icmp-type "+y.name+"\n")
-						if doDebugDump == True:
-							fileReqObjectGroupDebugDump.write("object-group icmp-type "+y.name+"\n")
-						for z in y.listOfIcmpObjects:
-							fileReqObjectGroupCopyPaste.write(z.fullLine)
-							if doDebugDump == True:
-								fileReqObjectGroupDebugDump.write(z.fullLine)
-					if len(y.listOfPortObjects) > 0:
-						fileReqObjectGroupCopyPaste.write("object-group service "+y.name+"\n")
-						if doDebugDump == True:
-							fileReqObjectGroupDebugDump.write("object-group service "+y.name+"\n")
-						for z in y.listOfPortObjects:
-							fileReqObjectGroupCopyPaste.write(z.fullLine)
-							if doDebugDump == True:
-								fileReqObjectGroupDebugDump.write(z.fullLine)
-					if len(y.listOfProtocolObjects) > 0:
-						fileReqObjectGroupCopyPaste.write("object-group protocol "+y.name+"\n")
-						if doDebugDump == True:
-							fileReqObjectGroupDebugDump.write("object-group protocol "+y.name+"\n")
-						for z in y.listOfProtocolObjects:
-							fileReqObjectGroupCopyPaste.write(z.fullLine)
-							if doDebugDump == True:
-								fileReqObjectGroupDebugDump.write(z.fullLine)
-					#Add Sub groups to the object group
-                                        if len(y.listOfObjectGroups) > 0:
-                                                for z in y.listOfObjectGroups:
-							fileReqObjectGroupCopyPaste.write(" group-object "+z+"\n")
-							if doDebugDump == True:
-                                                        	fileReqObjectGroupDebugDump.write(" group-object "+z+"\n")
-					#Must end in an exit for copy and past to work
-					if doDebugDump == True:
-						fileReqObjectGroupCopyPaste.write("exit\n")
-						fileReqObjectGroupDebugDump.write("exit\n")
+			printCopyAndPasteOfObject(x,listOfObjectGroups2,allPrintedObjects,fileReqObjectGroupCopyPaste,fileReqObjectGroupDebugDump,doDebugDump)
+	
+		
+
+
 #Control stuff for text menu
 	if getFileFrom == 'rancidlist':
 		try:
