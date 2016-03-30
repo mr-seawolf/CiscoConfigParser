@@ -102,8 +102,6 @@ def ParseMe(inputFile, options):
 	#This will return a list[] of a ACL line expanded to every combination. It can be rather large
 	#list contains entries like: access-list outside_access_in extended permit tcp 192.168.101.0 255.255.255.0 10.150.130.144 255.255.255.255  eq https
 	def ExpandRule(rule,listOfObjectGroups,listOfAccessLists):
-		#global listOfObjectGroups, tempObjectGroupExpanded
-		#global listOfAccessLists
 		global tempObjectGroupExpanded
 		tempExpandedRules = []
 		tempExpandedRulesContainsOG = []
@@ -163,7 +161,6 @@ def ParseMe(inputFile, options):
 							tempExpandedRules.append(tempString)
 			
 			#Now Go through the tempExpandedRules array and swap out any "object" stuff. Could be multiples per line
-			#Dont think this is working. crashes if the cfg does not have an "object"
 			for x in tempExpandedRules:
 				ruleSplit = x.split()
 				objectIndexLocation = 0
@@ -172,12 +169,6 @@ def ParseMe(inputFile, options):
 						foundObject = True
 						break
 					objectGroupIndexLocation += 1	
-		#	if foundObjectGroup:
-		#		objectName = ruleSplit[objectIndexLocation+1]		
-								
-			#Test Print	
-			#for x in tempExpandedRules:
-			#	print x	
 		return tempExpandedRules
 				
 	
@@ -245,8 +236,6 @@ def ParseMe(inputFile, options):
 		listOfInterfaces
 		listOfTunnelGroups
 		listOfCryptoMaps
-#		hostname
-				
 		objectExists = False
 		
 		
@@ -257,25 +246,18 @@ def ParseMe(inputFile, options):
 		
 		#Handle Command network-object
 		if commandName == 'network-object':
-						
-			#print commandName +" "+ lineList[1] +" "+ lineList[2]
 			if lineList[1] == 'host':
-				#tempNetworkObject = NetworkObject(lineList[1])
 				#Check if a network-object host already exists
 				for x in listOfHosts:
 					if x.ipAddy == lineList[2]:
 						objectExists = True
 						if currentOpenRootCommand == 'object-group':
-							#print "add to object-group ",listOfObjectGroups[-1].name
 							listOfObjectGroups[-1].listOfNetworkObjects.append(NetworkObject(lineList[1],lineList,line))
 				if objectExists == False:
 					listOfHosts.append(NetworkObject(lineList[1],lineList,line))
 					networkObjectCount += 1
 					if currentOpenRootCommand == 'object-group':
 							listOfObjectGroups[-1].listOfNetworkObjects.append(NetworkObject(lineList[1],lineList,line))
-					#listOfHosts.append(tempNetworkObject))
-				#else:
-				#	print "OBJECT EXISTS", lineList
 			elif lineList[1] == 'object':
 				#Find the network  object and add it to the groups list
 				for x in listOfHosts:
@@ -296,8 +278,6 @@ def ParseMe(inputFile, options):
 					if currentOpenRootCommand == 'object-group':
 							listOfObjectGroups[-1].listOfNetworkObjects.append(NetworkObject('network',lineList,line))
 					#listOfHosts.append(tempNetworkObject))
-				#else:
-				#	print "OBJECT EXISTS", lineList
 			#IF this is part of a larger Object-Group we must add it to that
 		elif commandName == 'object':
 			if currentOpenRootCommand == 'object':
@@ -330,13 +310,6 @@ def ParseMe(inputFile, options):
 			#the 2nd column is protocol which will affect the parsing
 			#Check if a service-object host already exists
 			#I don't think we really care if service-objects are doubles
-			#for x in listOfServiceObjects:
-			#	if x.fullLine == line:
-			#		objectExists = True
-			#		#print "check ", x.fullLine, "TO ", line
-			#		#print "ServiceObject Exists " + line
-			#	else:
-			#		objectExists = False
 			objectExists = False
 			if lineList[1] == 'object':
 				#Find the network  object and add it to the groups list
@@ -526,43 +499,30 @@ def ParseMe(inputFile, options):
 						listOfHosts[pos].setNatLineNum(natLineNum)
 					else:
 						pos += 1
-		
 		elif commandName == 'ntp':
 			#Temp ghetto job, dump to a file for ntp config lines
 			outputNTPFile = open(installedDir+"NTPsettings", 'a')
 			outputNTPFile.write(hostname[0]+" " + line)	
 			
-											
-	# When parsing through the lines we need to check if the line starts with whitespace or not
-	
-	
-	#FUN STUFF BELOW HERE
+	#Fun stuff below here.
 	
 	#Load Into SQL DB
-	
 	def SqlUploadInterfaces(interfaceObject,cur,hostname,listOfInterfaces):
-		
 		interface = interfaceObject.interface
 		access_vlan = interfaceObject.accessVlan
 		voice_vlan = interfaceObject.voiceVlan
 		spanningtree_portfast_enabled = interfaceObject.spanningtreePortfastEnabled
 		switchport_mode = interfaceObject.switchportMode
-		
 		with con:
 			cur.execute("INSERT INTO interfaces (device_repo_name,revision_number,hostname,interface,access_vlan,voice_vlan,spanningtree_portfast_enabled,switchport_mode)\
 			values ('%s','%d','%s','%s','%s','%s','%d','%s')" % (deviceConfig,deviceRepoRevisionNumber,hostname,interface,access_vlan,voice_vlan,spanningtree_portfast_enabled,switchport_mode))
-					
-	
 	def SqlUploadAclSubrules(aclSubRule,cur,listOfHosts,listOfObjectGroups,hostname):
-		#global tempObjectGroupExpanded, listOfHosts, hostname,listOfObjectGroups
 		global tempObjectGroupExpanded
 		list1 = []
 		list2 = []
 		list3 = []
 		list4 = []
 		list5 = []
-		
-		
 		#PROTO
 		#if aclSubRule.protocolIsOG == True:
 		#	#c1longest = len(aclSubRule.protocol) + len(' object-group')
@@ -692,7 +652,6 @@ def ParseMe(inputFile, options):
 			aclSubRule.source,aclSubRule.source_operator,aclSubRule.source_port,aclSubRule.dest,aclSubRule.dest_operator,aclSubRule.dest_port,aclSubRule.icmp_type,ex_list1,ex_list2,ex_list4,ex_list3,ex_list5))
 
 	def ExpandExtendedAclForHuman(aclSubRule,listOfHosts,listOfObjectGroups,listOfServiceObjects):
-		#global tempObjectGroupExpanded, listOfHosts, listOfObjectGroups
 		global tempObjectGroupExpanded
 		list1 = []
 		list2 = []
@@ -1046,57 +1005,47 @@ def ParseMe(inputFile, options):
 			currentOpenRootCommand = lineList[0]
 			#print "NO Whitespace - Start of new command CWL=",currentWhiteSpaceLevel," ",line
 			if lineList[0] in listOfCommands and deviceType == 'cisco_asa':
-				#outputFileDebugDump.write("PARSING - THIS COMMAND " + lineList[0] + "\n")
 				LineParser(lineList[0],lineList,line)
 			elif lineList[0] in listOfCiscoSwitchCommands and deviceType == 'cisco_switch':
 				LineParser(lineList[0],lineList,line)
 			else:
 				linesIgnored += 1
 				linesTotal += 1
-				#outputFileDebugDump.write("IGNORE - THIS COMMAND NOT IN LIST " + lineList[0] + "\n") 
 		elif whiteSpace > 0 and currentWhiteSpaceLevel == 0:
 			currentWhiteSpaceLevel += 1
 			currentOpenSubCommandLine = line
 			currentOpenSubCommandLine = lineList[0]
 			if lineList[0] in listOfCommands and deviceType == 'cisco_asa':
-				#outputFileDebugDump.write("PARSING - THIS COMMAND " + lineList[0] + "\n")
 				LineParser(lineList[0],lineList,line)
 			elif lineList[0] in listOfCiscoSwitchCommands and deviceType == 'cisco_switch':
 				LineParser(lineList[0],lineList,line)
 			else:
 				linesIgnored += 1
 				linesTotal += 1
-				#outputFileDebugDump.write("IGNORE - THIS COMMAND NOT IN LIST " + lineList[0] + "\n")
-			#outputFileDebugDump.write("2nd if CURRENT WHITE SPACE LEVEL= "+ str(currentWhiteSpaceLevel) + "\n")
 		
 		elif whiteSpace > 0 and whiteSpace == previousLineWhiteSpace:
 			currentWhiteSpaceLevel = currentWhiteSpaceLevel
 			currentOpenSubCommandLine = line
 			currentOpenSubCommandLine = lineList[0]
 			if lineList[0] in listOfCommands and deviceType == 'cisco_asa':
-				#outputFileDebugDump.write("PARSING - THIS COMMAND " + lineList[0] + "\n")
 				LineParser(lineList[0],lineList,line)
 			elif lineList[0] in listOfCiscoSwitchCommands and deviceType == 'cisco_switch':
 				LineParser(lineList[0],lineList,line)
 			else:
 				linesIgnored += 1
 				linesTotal += 1
-				#outputFileDebugDump.write("IGNORE - THIS COMMAND NOT IN LIST " + lineList[0] + "\n")
-			#outputFileDebugDump.write("3rd if CURRENT WHITE SPACE LEVEL= ", str(currentWhiteSpaceLevel) + "\n")
 	
 		elif whiteSpace > 0 and whiteSpace > previousLineWhiteSpace:
 			currentWhiteSpaceLevel += 1
 			currentOpenSubSubCommandLine = line
 			currentOpenSubSubCommandLine = lineList[0]
 			if lineList[0] in listOfCommands and deviceType == 'cisco_asa':
-				#outputFile.write("PARSING - THIS COMMAND " + lineList[0] + "\n")
 				LineParser(lineList[0],lineList,line)
 			elif lineList[0] in listOfCiscoSwitchCommands and deviceType == 'cisco_switch':
 				LineParser(lineList[0],lineList,line)
 			else:
 				linesIgnored += 1
 				linesTotal += 1
-				#outputFileDebugDump.write("IGNORE - THIS COMMAND NOT IN LIST " + lineList[0] + "\n")
 			#outputFileDebugDump.write("4th if CURRENT WHITE SPACE LEVEL= ", str(currentWhiteSpaceLevel) + "\n")
 		previousLineWhiteSpace = whiteSpace		
 
@@ -1263,66 +1212,7 @@ def ParseMe(inputFile, options):
 		for x in listOfTunnelGroups:
 			x.writeToDebugLog(outputFileDebugDump)
 	
-
-	#print "NumberOfObjectGroups ",len(listOfObjectGroups)
-	#for x in listOfObjectGroups:
-	#	print "*****START OF OBJECT GROUP"
-	#	if x.typeOfObjectGroup == 'service':
-	#		print x.name,x.typeOfServiceGroup
-	#	else:
-	#		print x.name
-	#	x.printDirectItemsOnly()
-	#	for y in x.listOfObjectGroups:
-			#print "YABBA YABBA DO", y
-	#		ExpandObjectGroup(y)
-	#	print "*****STOP OF OBJECT GROUP"
-	#for x in listOfAccessLists:
-	#	#print x.name
-		#for y in x.listOfRules:
-		#	print "SUB RULE ", y
-
-	#TESTING ACL sub rule stuff
-	#for x in listOfAccessLists:
-		#number = 8
-		#f x.name == 'dev16_access_in':
-		#break
-		
-	#	for y in x.accessListSubRuleList:
-	#		print "******************************************************************"
-	#		print y.fullLine
-	#		print 'name',y.accessListName
-	#		print 'type',y.accessListType
-	#		print 'typeOfAccess',y.typeOfAccess
-	#		print 'Protocol',y.protocol
-	#		print 'source',y.source
-	#		print 'source Op',y.source_operator
-	#		print 'source Port',y.source_port
-	#		print 'dest',y.dest
-	#		print 'dest Op',y.dest_operator
-	#		print 'dest Port',y.dest_port
-	#		print 'icmp-type',y.icmp_type
-	#		print "******************************************************************"	
-	
-	#TESING to print object based ACL sub rule
-	#for x in listOfAccessLists:
-	#number = 8
-	#if x.name == 'dev16_access_in':
-	#	break
-	#print x.accessListSubRuleList[number].fullLine
-	#print 'name',x.accessListSubRuleList[number].accessListName
-	#print 'type',x.accessListSubRuleList[number].accessListType
-	#print 'typeOfAccess',x.accessListSubRuleList[number].typeOfAccess
-	#print 'Protocol',x.accessListSubRuleList[number].protocol
-	#print 'source',x.accessListSubRuleList[number].source
-	#print 'source Op',x.accessListSubRuleList[number].source_operator
-	#print 'source Port',x.accessListSubRuleList[number].source_port
-	#print 'dest',x.accessListSubRuleList[number].dest
-	#print 'dest Op',x.accessListSubRuleList[number].dest_operator
-	#print 'dest Port',x.accessListSubRuleList[number].dest_port
-	#print 'icmp-type',x.accessListSubRuleList[number].icmp_type
-	
 	#TESTING FOR super expanding all ACLs
-	
 	outputFileLargeACLs.write('******ACL Applied to each Interface******\n')
 	for x in listOfAccessGroups:
 		outputFileLargeACLs.write('Interface: '+x.interfaceAppliedTo+' '+x.direction+' ACL: '+x.aclApplied+'\n')
@@ -1363,50 +1253,14 @@ def ParseMe(inputFile, options):
 				#print match.group()
 				if match:
 					outputFileLargeACLsForCopyAndPaste.write(" " + match.group() + '\n')
-					#print 'Match Found: ', match.group()
-				#else:
-				#	print 'no Match'
-				#outputFileLargeACLsForCopyAndPaste.write(z+ '\n')
-				#print z
-			#print y
 		outputFileLargeACLsForCopyAndPaste.write('\n')
-		#for y in x.listofRules:
-		#	tempExpandedRules = ExpandRule(y)
-		#for x in tempExpandedRules:
-			#print x	
-	
-	#TEST TO PRINT ALL object objects
-	#for x in listOfObjects:
-	#	x.printVar()
-	#	one = 1
-	
-	#ExpandRule(listOfAccessLists[1].listOfRules[1])
-	
-	#tempObjectGroupExpanded = []
-	#ExpandObjectGroup('ABC_CORPORATE')
-	#for x in tempObjectGroupExpanded:
-	#	print x
-	
-	#	x.printListCounts()
-	#print listOfObjectGroups[5].name,len(listOfObjectGroups[5].listOfNetworkObjects)
-	#listOfObjectGroups[5].printListCounts()
 	
 	print "Hostname = " + hostname[0]
 	print "Lines Processed = " + str(linesProcessed)
 	print "Lines Ignored = " + str(linesIgnored) 
 	print "lines total = " + str(linesTotal)
 	print "****************STOP PARSING CONFIG****************"
-	#print "Network Object Count (Unique)= " + str(networkObjectCount)
-	#print "Service Object Count (Unique)= " + str(serviceObjectCount)
-	#print "Port Object Count (Unique)= " + str(portObjectCount)
-	# print "Protocol Object Count (Unique)= " + str(protocolObjectCount)
-	# print "Object Group Count (Unique)= " + str(objectGroupCount)
-	# print "ICMP Object Count (Unique)= " + str(icmpObjectCount)
-	#print "ACL Line Count = " + str(accessListCount)
-
 	return(listOfAccessGroups,listOfHosts,listOfObjectGroups,listOfServiceObjects,listOfPortObjects,listOfProtocolObjects,listOfIcmpObjects,listOfAccessLists,listOfInterfaces,listOfTunnelGroups)
-
-
 
 def CompareProtocolExpandedLists(list1,list2):
 	set1 = set(list1)
@@ -1461,69 +1315,51 @@ def printCopyAndPasteOfSingleObject(fileWrite,fileWriteDebug,object,boolean):
 	y = object
 	if doDebugDump == True:
 		fileReqObjectGroupDebugDump.write("Name of retreived object " + y.name + "\n")
+		fileReqObjectGroupDebugDump.write("fullLine of object: " + y.fullLine)
 		fileReqObjectGroupDebugDump.write("listOfNetworkObjects Length: "+str(len(y.listOfNetworkObjects))+"\n")
 		fileReqObjectGroupDebugDump.write("listOfServiceObjects Length: "+str(len(y.listOfServiceObjects))+"\n")
 		fileReqObjectGroupDebugDump.write("listOfObjectGroups Length: "+str(len(y.listOfObjectGroups))+"\n")
 		fileReqObjectGroupDebugDump.write("listOfIcmpObjects Length: "+str(len(y.listOfIcmpObjects))+"\n")
 		fileReqObjectGroupDebugDump.write("listOfPortObjects Length: "+str(len(y.listOfPortObjects))+"\n")
 		fileReqObjectGroupDebugDump.write("listOfProtocolObjects Length: "+str(len(y.listOfProtocolObjects))+"\n")
-		#If the group has sub groups, make note of that
-		#if len(y.listOfObjectGroups) > 0:
-		#	hasSubGroups == True
-		#If a Network Object write it out
-		fileReqObjectGroupCopyPaste.write("object-group "+ y.typeOfObjectGroup+" "+ y.name+"\n")
-      	        if doDebugDump == True:
-              		fileReqObjectGroupDebugDump.write("object-group "+y.typeOfObjectGroup+" "+y.name+"\n")
-		if len(y.listOfNetworkObjects) > 0:
-			#fileReqObjectGroupCopyPaste.write("object-group network "+y.name+"\n")
-			#if doDebugDump == True:
-			#	fileReqObjectGroupDebugDump.write("object-group network "+y.name+"\n")
-			for z in y.listOfNetworkObjects:
-				fileReqObjectGroupCopyPaste.write(z.fullLine)
-				if doDebugDump == True:
-					fileReqObjectGroupDebugDump.write(z.fullLine)
-		if len(y.listOfServiceObjects) > 0:
-			#fileReqObjectGroupCopyPaste.write("object-group service "+y.name+"\n")
-			#if doDebugDump == True:
-			#	fileReqObjectGroupDebugDump.write("object-group service "+y.name+"\n")
-			for z in y.listOfServiceObjects:
-				fileReqObjectGroupCopyPaste.write(z.fullLine)
-				if doDebugDump == True:
-					fileReqObjectGroupDebugDump.write(z.fullLine)
-		if len(y.listOfIcmpObjects) > 0:
-			#fileReqObjectGroupCopyPaste.write("object-group icmp-type "+y.name+"\n")
-			#if doDebugDump == True:
-			#	fileReqObjectGroupDebugDump.write("object-group icmp-type "+y.name+"\n")
-			for z in y.listOfIcmpObjects:
-				fileReqObjectGroupCopyPaste.write(z.fullLine)
-				if doDebugDump == True:
-					fileReqObjectGroupDebugDump.write(z.fullLine)
-		if len(y.listOfPortObjects) > 0:
-			#fileReqObjectGroupCopyPaste.write("object-group service "+y.name+"\n")
-			#if doDebugDump == True:
-			#	fileReqObjectGroupDebugDump.write("object-group service "+y.name+"\n")
-			for z in y.listOfPortObjects:
-				fileReqObjectGroupCopyPaste.write(z.fullLine)
-				if doDebugDump == True:
-					fileReqObjectGroupDebugDump.write(z.fullLine)
-		if len(y.listOfProtocolObjects) > 0:
-			#fileReqObjectGroupCopyPaste.write("object-group protocol "+y.name+"\n")
-			#if doDebugDump == True:
-			#	fileReqObjectGroupDebugDump.write("object-group protocol "+y.name+"\n")
-			for z in y.listOfProtocolObjects:
-				fileReqObjectGroupCopyPaste.write(z.fullLine)
-				if doDebugDump == True:
-					fileReqObjectGroupDebugDump.write(z.fullLine)
-		#Add Sub groups to the object group
-		if len(y.listOfObjectGroups) > 0:
-			for z in y.listOfObjectGroups:
-				fileReqObjectGroupCopyPaste.write(" group-object "+z+"\n")
-				if doDebugDump == True:
-					fileReqObjectGroupDebugDump.write(" group-object "+z+"\n")
-		#Must end in an exit for copy and past to work
-		if doDebugDump == True:
-			fileReqObjectGroupCopyPaste.write("exit\n")
-			fileReqObjectGroupDebugDump.write("exit\n")
+	fileReqObjectGroupCopyPaste.write(y.fullLine)
+        if doDebugDump == True:
+       		fileReqObjectGroupDebugDump.write(y.fullLine)
+	if len(y.listOfNetworkObjects) > 0:
+		for z in y.listOfNetworkObjects:
+			fileReqObjectGroupCopyPaste.write(z.fullLine)
+			if doDebugDump == True:
+				fileReqObjectGroupDebugDump.write(z.fullLine)
+	if len(y.listOfServiceObjects) > 0:
+		for z in y.listOfServiceObjects:
+			fileReqObjectGroupCopyPaste.write(z.fullLine)
+			if doDebugDump == True:
+				fileReqObjectGroupDebugDump.write(z.fullLine)
+	if len(y.listOfIcmpObjects) > 0:
+		for z in y.listOfIcmpObjects:
+			fileReqObjectGroupCopyPaste.write(z.fullLine)
+			if doDebugDump == True:
+				fileReqObjectGroupDebugDump.write(z.fullLine)
+	if len(y.listOfPortObjects) > 0:
+		for z in y.listOfPortObjects:
+			fileReqObjectGroupCopyPaste.write(z.fullLine)
+			if doDebugDump == True:
+				fileReqObjectGroupDebugDump.write(z.fullLine)
+	if len(y.listOfProtocolObjects) > 0:
+		for z in y.listOfProtocolObjects:
+			fileReqObjectGroupCopyPaste.write(z.fullLine)
+			if doDebugDump == True:
+				fileReqObjectGroupDebugDump.write(z.fullLine)
+	#Add Sub groups to the object group
+	if len(y.listOfObjectGroups) > 0:
+		for z in y.listOfObjectGroups:
+			fileReqObjectGroupCopyPaste.write(" group-object "+z+"\n")
+			if doDebugDump == True:
+				fileReqObjectGroupDebugDump.write(" group-object "+z+"\n")
+	#Must end in an exit for copy and past to work
+	if doDebugDump == True:
+		fileReqObjectGroupCopyPaste.write("exit\n")
+		fileReqObjectGroupDebugDump.write("exit\n")
 	
 def printCopyAndPasteOfObject(name,allObjectGroups,allPrintedObjects,fileWrite,fileWriteDebug,doDebugDump):
 	for x in allObjectGroups:
@@ -1835,17 +1671,6 @@ def main():
 					fileAclComparisonDebugDump.write("typeOfAccessCompareValue" + str(typeOfAccessCompareValue) + "\n")
 					fileAclComparisonDebugDump.write("totalMatchValue" + str(totalMatchValue) + "\n")
 
-				#print "*****COMPARING SUMMARY BELOW*****"
-				#print "I'M IN THE NO MATCH LIST"
-				#print "Primary Config ACE  : ", aceOneTemp.fullLine
-				#print "Secondary Config ACE: ",aceTwoTemp.fullLine
-				#print "protocolCompareValue: ",protocolCompareValue
-				#print "sourceIpCompareValue: " , sourceIpCompareValue
-				#print "sourcePortCompareValue: " , sourcePortCompareValue
-				#print "destIpCompareValue: " ,destIpCompareValue
-				#print "destPortCompareValue" , destPortCompareValue
-				#print "typeOfAccessCompareValue" , typeOfAccessCompareValue
-				#print "totalMatchValue" , totalMatchValue
 				if totalMatchValue == 100:
 					fileAcl100MatchList.write("******MATCHING PAIR BELOW*****\n")
 					fileAcl100MatchList.write("Primary ACE  : "+ aceOneTemp.fullLine)
@@ -1892,18 +1717,6 @@ def main():
 					fileAclComparisonDebugDump.write("destPortCompareValue" + str(destPortCompareValue) + "\n")
 					fileAclComparisonDebugDump.write("typeOfAccessCompareValue" + str(typeOfAccessCompareValue) + "\n")
 					fileAclComparisonDebugDump.write("totalMatchValue" + str(totalMatchValue) + "\n")				
-				#print "*****COMPARING SUMMARY BELOW*****"
-				#print "ACE's in the secondaryACL List: ", len(secondaryACL.accessListSubRuleList)
-				#print "IM IN THE SECONDARYACL LIST"
-				#print "Primary Config ACE: ", aceOneTemp.fullLine
-				#print "Secondary Config ACE: ",aceTwoTemp.fullLine
-				#print "protocolCompareValue: ",protocolCompareValue
-				#print "sourceIpCompareValue: " , sourceIpCompareValue
-				#print "sourcePortCompareValue: " , sourcePortCompareValue
-				#print "destIpCompareValue: " ,destIpCompareValue
-				#print "destPortCompareValue" , destPortCompareValue
-				#print "typeOfAccessCompareValue" , typeOfAccessCompareValue
-				#print "totalMatchValue" , totalMatchValue
 				if totalMatchValue == 100:
 					fileAcl100MatchList.write("******MATCHING PAIR BELOW*****\n")
                                         fileAcl100MatchList.write("Primary ACE  : "+ aceOneTemp.fullLine)
