@@ -1795,6 +1795,56 @@ def main():
 			if doDebugDump == True:
 				fileReqObjectGroupDebugDump.write("****Name of Object in Req List= "+x+"\n")
 			printCopyAndPasteOfObject(x,listOfObjectGroups2,allPrintedObjects,fileReqObjectGroupCopyPaste,fileReqObjectGroupDebugDump,doDebugDump)
+
+#START QUESTIONABLE SECTION
+
+#Identify where objects fullLine do not match. This is name, not content
+		setOfRequiredObjectsNameConflicts = set () #The ending tcp/udp/tcp-udp
+		setOfRequiredObjectsNoNameConflicts = set () #Add to config with no issues
+		setOfRequiredObjectsExactFullLineMatch = set ()
+		setOfRequiredObjectsNotInPrimary = set()
+		for x in setOfRequiredObjects: #x is not an object, just a name of an object
+			#retrive that object from the list of objects for secondary config
+			for z in listOfObjectGroups2:
+				if x == z.name:
+					break
+			#now z is the object in question
+			for y in listOfObjectGroups1:
+				if y.fullLine == z.fullLine:
+					setOfRequiredObjectsExactFullLineMatch.add(z)
+				if y.name == z.name and y.fullLine != z.fullLine:
+					setOfRequiredObjectsNameConflicts.add(z)		
+
+		outputFileReqObjectsExactFullLineMatch = outputDir+'ReqObjectsExactFullLineMatch.txt'
+		fileReqObjectsExactFullLineMatch = open(outputFileReqObjectsExactFullLineMatch,'w')
+		outputFileReqObjectsExactFullLineMatchDebug = outputDir+'ReqObjectsExactFullLineMatchDebug.txt'
+		fileReqObjectsExactFullLineMatchDebug = open(outputFileReqObjectsExactFullLineMatchDebug,'w')		
+		allPrintedObjects = set()
+
+		#Print all the objects in the secondary config that have match in the primary config
+		fileReqObjectsExactFullLineMatch.write("All Objects in the Secondary config that have a match in the Primary based on fullLine value\n")
+		if doDebugDump == True:
+                	fileReqObjectsExactFullLineMatchDebug.write("All Objects in the Secondary config that have a match in the Primary based on fullLine value\n")
+		for x in setOfRequiredObjectsExactFullLineMatch:
+			if doDebugDump == True:
+				fileReqObjectsExactFullLineMatchDebug.write("****Name of Object in Req List= "+x.fullLine)
+			printCopyAndPasteOfObject(x.name,listOfObjectGroups2,allPrintedObjects,fileReqObjectsExactFullLineMatch,fileReqObjectsExactFullLineMatchDebug,doDebugDump)
+
+		outputFileReqObjectsNameConflicts = outputDir+'ReqObjectsNameConflicts.txt'
+		fileReqObjectsNameConflicts = open(outputFileReqObjectsNameConflicts,'w')
+		outputFileReqObjectsNameConflictsDebug = outputDir+'ReqObjectsNameConflictsDebug.txt'
+		fileReqObjectsNameConflictsDebug = open(outputFileReqObjectsNameConflictsDebug,'w')		
+		allPrintedObjects = set()
+		
+		#Print all the objects in the secondary config that have a conflict in the primary config
+                fileReqObjectsNameConflicts.write("All Objects in the Secondary config that have a name conflict in the Primary based on fullLine value\n")
+                if doDebugDump == True:
+                        fileReqObjectsNameConflictsDebug.write("All Objects in the Secondary config that have a name conflict in the Primary based on fullLine value\n")
+		for x in setOfRequiredObjectsNameConflicts:
+			if doDebugDump == True:
+				fileReqObjectsNameConflictsDebug.write("****Name of Object in Req List= "+x.fullLine)
+			printCopyAndPasteOfObject(x.name,listOfObjectGroups2,allPrintedObjects,fileReqObjectsNameConflicts,fileReqObjectsNameConflictsDebug,doDebugDump)	
+#END QUESTIONABLE SECTION
 	
 		
 
