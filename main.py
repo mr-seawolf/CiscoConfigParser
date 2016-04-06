@@ -26,7 +26,7 @@ from  TunnelGroupObject import *
 from CryptoMapObject import *
 from DeviceObject import *
 from operator import pos
-
+from copy import deepcopy
 
 def ParseMe(inputFile, options):
 	#This are the Commands for Cisco ASA Firewalls
@@ -1622,6 +1622,7 @@ def main():
 		input3 = raw_input("Enter Primary Config ACL to compare with: ")
 		print("ACL Choices on Secondary Config: " + secondaryConfigACL)
 		input4 = raw_input("Enter Secondary Config ACL to compare against Primary: ")
+		input5 = raw_input("Enter the value to append to conflict ace/objects: ")
 		aceMatchList = []
 		aceNoMatchList = []
 		primaryACL = []
@@ -1796,8 +1797,6 @@ def main():
 				fileReqObjectGroupDebugDump.write("****Name of Object in Req List= "+x+"\n")
 			printCopyAndPasteOfObject(x,listOfObjectGroups2,allPrintedObjects,fileReqObjectGroupCopyPaste,fileReqObjectGroupDebugDump,doDebugDump)
 
-#START QUESTIONABLE SECTION
-
 #Identify where objects fullLine do not match. This is name, not content
 		setOfRequiredObjectsNameConflicts = set () #The ending tcp/udp/tcp-udp
 		setOfRequiredObjectsNoNameConflicts = set () #Add to config with no issues
@@ -1844,9 +1843,93 @@ def main():
 			if doDebugDump == True:
 				fileReqObjectsNameConflictsDebug.write("****Name of Object in Req List= "+x.fullLine)
 			printCopyAndPasteOfObject(x.name,listOfObjectGroups2,allPrintedObjects,fileReqObjectsNameConflicts,fileReqObjectsNameConflictsDebug,doDebugDump)	
-#END QUESTIONABLE SECTION
+
+		#Remove the Name conflicts from the setOfRequiredObjects and print out
+		outputFileReqObjectGroupCopyPasteModified = outputDir+'ReqObjectGroupCopyPasteModified.txt'
+		fileReqObjectGroupCopyPasteModified = open(outputFileReqObjectGroupCopyPasteModified,'w')
+		outputFileReqObjectGroupCopyPasteModifiedDebug = outputDir+'ReqObjectGroupCopyPasteModifiedDebug.txt'
+		fileReqObjectGroupCopyPasteModifiedDebug = open(outputFileReqObjectGroupCopyPasteModifiedDebug,'w')
+		setOfRequiredObjectsModified = setOfRequiredObjects.copy()
+		for x in setOfRequiredObjectsNameConflicts:
+			setOfRequiredObjectsModified.remove(x.name)
+		#x is just a name, so we have to retrieive the object from the listOfObjectGroups2
+		allPrintedObjects = set()
+		for x in setOfRequiredObjectsModified:
+			if doDebugDump == True:
+				fileReqObjectGroupCopyPasteModifiedDebug.write("****Name of Object in Req List= "+x+"\n")
+			printCopyAndPasteOfObject(x,listOfObjectGroups2,allPrintedObjects,fileReqObjectGroupCopyPasteModified,fileReqObjectGroupCopyPasteModifiedDebug,doDebugDump)
 	
-		
+#Go through the aceNoMatchList to find required Object Groups for a copy and paste config
+		outputFileAclNoMatchListAppended = outputDir+'ACLNoMatchListAppended.txt'
+		fileAclNoMatchListAppended = open(outputFileAclNoMatchListAppended,'w')
+		appendedValue = input5
+		#appendedValue = "-SECOND"
+		setOfRequiredObjectsAppendedValue = set()
+		for tempACE in aceNoMatchList:
+			#Check if Protocol section is an Object Group
+			if tempACE.protocolIsOG == True:
+				setOfRequiredObjectsAppendedValue.add(tempACE.protocol+appendedValue)
+				tempACE.fullLine = tempACE.fullLine.replace(tempACE.protocol+" ",tempACE.protocol+appendedValue+" ")
+			elif  tempACE.protocolIsO == True:
+				#DO SOMETHING, This might only matter before version 9
+				setOfRequiredObjectsAppendedValue.add(tempACE.protocol+appendedValue)
+				tempACE.fullLine = tempACE.fullLine.replace(tempACE.protocol+" ",tempACE.protocol+appendedValue+" ")
+			#Check if Source section is an Object Group
+			if  tempACE.sourceIsOG == True:
+				setOfRequiredObjectsAppendedValue.add(tempACE.source+appendedValue)
+				tempACE.fullLine = tempACE.fullLine.replace(tempACE.source+" ",tempACE.source+appendedValue+" ")
+			elif  tempACE.sourceIsO == True:
+				#DO SOMETHING, This might only matter before version 9
+				setOfRequiredObjectsAppendedValue.add(tempACE.source+appendedValue)
+				tempACE.fullLine = tempACE.fullLine.replace(tempACE.source+" ",tempACE.source+appendedValue+" ")
+			#Check if Source Port section is an Object Group
+			if  tempACE.source_portIsOG == True:
+				#DO SOMETHING
+				setOfRequiredObjectsAppendedValue.add(tempACE.source_port+appendedValue)
+				tempACE.fullLine = tempACE.fullLine.replace(tempACE.source_port+" ",tempACE.source_port+appendedValue+" ")
+			elif  tempACE.source_portIsO == True:
+				setOfRequiredObjectsAppendedValue.add(tempACE.source_port+appendedValue)
+				tempACE.fullLine = tempACE.fullLine.replace(tempACE.source_port+" ",tempACE.source_port+appendedValue+" ")
+			#Check if Dest section is an Object Group
+			if  tempACE.destIsOG == True:
+				#DO SOMETHING
+				setOfRequiredObjectsAppendedValue.add(tempACE.dest+appendedValue)
+				tempACE.fullLine = tempACE.fullLine.replace(tempACE.dest+" ",tempACE.dest+appendedValue+" ")
+			elif  tempACE.destIsO == True:
+				#DO SOMETHING, This might only matter before version 9
+				setOfRequiredObjectsAppendedValue.add(tempACE.dest+appendedValue)
+				tempACE.fullLine = tempACE.fullLine.replace(tempACE.dest+" ",tempACE.dest+appendedValue+" ")
+			#Check if Dest port is an Object Group
+			if  tempACE.dest_portIsOG == True:
+				#DO SOMETHING
+				setOfRequiredObjectsAppendedValue.add(tempACE.dest_port+appendedValue)
+				tempACE.fullLine = tempACE.fullLine.replace(tempACE.dest_port+" ",tempACE.dest_port+appendedValue+" ")
+			elif  tempACE.dest_portIsO == True:
+				#DO SOMETHING, This might only matter before version 9
+				setOfRequiredObjectsAppendedValue.add(tempACE.dest_port+appendedValue)
+				tempACE.fullLine = tempACE.fullLine.replace(tempACE.dest_port+" ",tempACE.dest_port+appendedValue+" ")
+			fileAclNoMatchListAppended.write(tempACE.fullLine)		
+
+		outputFileReqObjectGroupCopyPasteAppended = outputDir+'ReqObjectGroupCopyPasteAppended.txt'
+		fileReqObjectGroupCopyPasteAppended = open(outputFileReqObjectGroupCopyPasteAppended,'w')			
+		outputFileReqObjectGroupCopyPasteAppendedDebug = outputDir+'ReqObjectGroupCopyPasteAppendedDebug.txt'
+		fileReqObjectGroupCopyPasteAppendedDebug = open(outputFileReqObjectGroupCopyPasteAppendedDebug,'w')		
+#Copy the objects in the listOfObjectGroups2 to a new list where the Object Groups have the appended value
+		listOfObjectGroups2Appended = deepcopy(listOfObjectGroups2)
+		print "Count for listOfObjectGroups2Appended: ", len(listOfObjectGroups2Appended)         		
+#For all required objects to merge in, append identifier
+		for x in listOfObjectGroups2Appended:
+			x.fullLine = x.fullLine.replace(x.name,x.name+appendedValue)
+			x.name = x.name+appendedValue
+		#for x in listOfObjectGroups2Appended:
+		#	for y in x.listOfObjectGroups:
+		#		y.name = y.name+appendedValue
+#x is just a name, so we have to retrieive the object from the appended listOfObjectGroups2
+		allPrintedObjects = set()
+		for x in setOfRequiredObjectsAppendedValue:
+			if doDebugDump == True:
+				fileReqObjectGroupCopyPasteAppendedDebug.write("****Name of Object in Appended Require List= "+x+"\n")
+			printCopyAndPasteOfObject(x,listOfObjectGroups2Appended,allPrintedObjects,fileReqObjectGroupCopyPasteAppended,fileReqObjectGroupCopyPasteAppendedDebug,doDebugDump)	
 
 
 #Control stuff for text menu
