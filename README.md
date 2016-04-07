@@ -45,3 +45,78 @@ SVNrepo=https://svn.example.com/example/CVS/networking/configs/
 SVNuser=examplesvnuser
 SVNpassword=examplesvnpassword
 ```
+```
+Primary = The first file inputted and is the config you will be merging into.
+Secondary = The second file inputted and is the config you will be merging from.
+
+ACL_100_Match_List_Dump.txt
+	A list of the ACEs that match (Content) between the 2 ACL's compared.
+ACL_Match_List.txt
+	A list of ACEs in the secondary that have a matching (by content) ACE in the primary.
+ACL_NO_Match_List.txt
+	List of ACEs in the secondary that have NO matching (by content) ACE in the primary. Minus the first line this is copy and pastable into a running config, granted the required objects already exist.
+ACLNoMatchListAppended.txt
+	List of ACEs in the secondary that have NO matching (by content) ACE in the primary. There is also a value (Manually inputted during runtime) that is appended to the end of every Object Group used in the ACEs. This is copy and pastable into a running config, granted the required objects already exist. The intent is to avoid accidently merging or modifying objects in the primary that are named the same but are used for something else.  
+debugDump.txt	
+	Print out of all the lists and objects created during the inital parsing of a configuration. if 'localcompare' option is used than this would be the primary firewall.
+output.txt (Fun fact: this was the orginal reason for this tool)
+	Prints out a human readable columnar formatted break down of all the ACEs for all the ACLs in a config. It will expand out any object groups and nested object groups. 
+output-LargeACLs.txt
+	Prints out an expanded list of all the ACEs across all the ACLs. Useful if your porting to another cisco device that doesn't support object-groups. Most cisco routers/switches don't.
+output-LargeACLs-CopyPaste.txt
+	Prints out an expanded list of all the ACEs across all the ACLs. But this time its in a format that you can copy and paste into a running config.
+ReqObjectGroupCopyPaste.txt
+	Prints out all the Object Groups that are required from the secondary config to make all the ACEs listed in ACL_NO_Match_List.txt valid. This is copy and pastable into a running config.
+ReqObjectGroupCopyPasteAppended.txt
+	Prints out all the Object Groups(with an appended value) that are required from the secondary config to make all the ACEs listed in ACLNoMatchListAppended.txt valid. This is copy and pastable into a running config.
+ReqObjectGroupCopyPasteAppendedDebug.txt
+	Similar to ReqObjectGroupCopyPasteAppended.txt but with extra information and is NOT copy and pastable.
+ReqObjectGroupCopyPasteModified.txt
+	ReqObjectGroupCopyPaste.txt minus ReqObjectsNameConflicts.txt.
+	Prints out all the Object Groups that are required from the secondary config to make all the ACEs listed in ACL_NO_Match_List.txt valid BUT minus the object groups in the output ReqObjectsNameConflicts.txt. This is copy and pastable into a running config. There is potential for object group name conflicts when it involves service or port objects. Refer to "Name Conflict Issue" below.
+ReqObjectGroupCopyPasteModifiedDebug.txt
+	Similar to ReqObjectGroupCopyPasteModifiedDebug.txt but with additional information and is NOT copy and pastable.
+ReqObjectGroupDebug.txt
+	Similar to ReqObjectGroupCopyPaste.txt but with additional information and is NOT copy and pastable.
+ReqObjectsExactFullLineMatch.txt
+	Print out of all the Objects in the secondary config that have a match in the primary based on fullLine value. Minus the first line this is copy and pastable. 'fullLine' is a variable for many of the objects that contains the full line from the configuration. Created to help identify potential "Name Conflict Issues" (see below) and to eventually compare like named objects to see if the content is vastly different. You don't want to misuse an object that was named the same but was created for a different reason.
+ReqObjectsExactFullLineMatchDebug.txt
+	Similar to ReqObjectsExactFullLineMatch.txt but with additional information and is NOT copy and pastable.
+ReqObjectsNameConflicts.txt
+	All Objects in the Secondary config that have a name conflict in the Primary based on fullLine value. Refer to "Name Conflict Issue" below. These are conflicts that must be resolved. if you attempted to paste these into a running config it would fail.
+ReqObjectsNameConflictsDebug.txt
+	Similar to ReqObjectsNameConflicts.txt but with more information.
+SECOND-debugDump.txt
+	Print out of all the lists and objects created during the initial parsing of a configuration. if 'localcompare' option is used than this would be the secondary firewall.
+SECOND-output.txt
+	Prints out a human readable columnar formatted break down of all the ACEs for all the ACLs in a config. It will expand out any object groups and nested object groups. 
+SECOND-output-LargeACLs.txt
+	Prints out an expanded list of all the ACEs across all the ACLs. Useful if your porting to another cisco device that doesn't support object-groups. Most cisco routers/switches don't.
+SECOND-output-LargeACLs-CopyPaste.txt
+	Prints out an expanded list of all the ACEs across all the ACLs. But this time its in a format that you can copy and paste into a running config.
+
+
+
+------------------------------------------------------------
+"Name Conflict Issue". Both object groups below are valid but only one type can exist on a firewall. 
+object-group service NAME-OF-OBJECT
+	Can contain 'service-object' objects.
+object-group service NAME-OF-OBJECT tcp
+	Can contain 'port-object' objects.
+ASA01/act(config)# object-group service NAME-OF-OBJECT
+ASA01/act(config-service-object-group)# ?
+  description     Specify description text
+  group-object    Configure an object group as an object
+  help            Help for service object-group configuration commands
+  no              Remove an object or description from object-group
+  service-object  Configure a service object
+
+ASA01/act(config-service-object-group)# object-group service NAME-OF-OBJECT
+ASA01/act(config-service-object-group)# ?
+  description   Specify description text
+  group-object  Configure an object group as an object
+  help          Help for service object-group configuration commands
+  no            Remove an object or description from object-group
+  port-object   Configure a port object
+------------------------------------------------------------
+```
