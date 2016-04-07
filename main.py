@@ -249,7 +249,7 @@ def ParseMe(inputFile, options):
 			if lineList[1] == 'host':
 				#Check if a network-object host already exists
 				for x in listOfHosts:
-					if x.ipAddy == lineList[2]:
+					if x.ipAddy == lineList[2] and x.subnet == '255.255.255.255':
 						objectExists = True
 						if currentOpenRootCommand == 'object-group':
 							listOfObjectGroups[-1].listOfNetworkObjects.append(NetworkObject(lineList[1],lineList,line))
