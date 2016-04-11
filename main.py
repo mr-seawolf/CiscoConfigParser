@@ -1921,6 +1921,10 @@ def main():
 		for x in listOfObjectGroups2Appended:
 			x.fullLine = x.fullLine.replace(x.name,x.name+appendedValue)
 			x.name = x.name+appendedValue
+			#print x.listOfObjectGroups
+			for i in range(0, len(x.listOfObjectGroups)):
+    				x.listOfObjectGroups[i]=x.listOfObjectGroups[i]+appendedValue
+			
 		#for x in listOfObjectGroups2Appended:
 		#	for y in x.listOfObjectGroups:
 		#		y.name = y.name+appendedValue
