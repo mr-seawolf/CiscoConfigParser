@@ -998,7 +998,10 @@ def ParseMe(inputFile, options):
 		#print whiteSpace
 		if line == '\n':
 			if doDebugDump:
-				outputFileDebugDump.write("BLANK LINE!\n")
+				outputFileDebugDump.write("BLANK LINE!\n Line# "+str(linesTotal))
+		elif len(lineList) == 0:
+			if doDebugDump:
+				outputFileDebugDump.write("LineList array is zero: Line# "+str(linesTotal))
 		elif line[0] != ' ':
 			currentWhiteSpaceLevel = 0
 			currentOpenRootCommandLine = line
