@@ -11,6 +11,7 @@ from ConfigParser import SafeConfigParser
 import getpass
 #import MySQLdb
 import re
+import csv
 from  NetworkObject import *
 from  ServiceObject import *
 from  PortObject import *
@@ -985,7 +986,16 @@ def ParseMe(inputFile, options):
 	
 	def PrintStandardAclForHuman(aclSubRule):
 		outputFile.write(aclSubRule.fullLine)
-	
+
+	#Checks if an address is in a network, returns True or False	
+	def addressInNetwork(ip,net):
+    		ipaddr = struct.unpack('!L',socket.inet_aton(ip))[0]
+    		netaddr,bits = net.split('/')
+    		netaddr = struct.unpack('!L',socket.inet_aton(netaddr))[0]
+    		netmask = ((1<<(32-int(bits))) - 1)^0xffffffff
+    		return ipaddr & netmask == netaddr & netmask
+
+
 	print "****************START PARSING CONFIG****************************"
 	#START PARSING THE inputFile
 	for line in inputFile:
@@ -999,6 +1009,9 @@ def ParseMe(inputFile, options):
 		if line == '\n':
 			if doDebugDump:
 				outputFileDebugDump.write("BLANK LINE!\n Line# "+str(linesTotal))
+		elif '::' in line:
+			if doDebugDump:
+				outputFileDebugDump.write("has '::', could be IPV6 related. Line# "+str(linesTotal))
 		elif len(lineList) == 0:
 			if doDebugDump:
 				outputFileDebugDump.write("LineList array is zero: Line# "+str(linesTotal))
@@ -1488,7 +1501,14 @@ def main():
 		options['deviceConfig'] = input1
 		deviceType = raw_input("Enter Device Type[cisco_asa / cisco_switch: ")
 		options['deviceType'] = deviceType
-		deviceRepoRevisionNumber = 0 
+		deviceRepoRevisionNumber = 0
+	if getFileFrom == 'localpoc':
+                input1 = raw_input("Enter local filename: ")
+                inputFile = open(installedDir+input1 , 'r')
+                options['deviceConfig'] = input1
+                deviceType = raw_input("Enter Device Type[cisco_asa / cisco_switch: ")
+                options['deviceType'] = deviceType
+                deviceRepoRevisionNumber = 0 
 	if getFileFrom == 'localcompare':
 		input1 = raw_input("Enter local filename one: ")
                 inputFile = open(installedDir+input1 , 'r')
@@ -1555,6 +1575,76 @@ def main():
 	if getFileFrom == 'local' or getFileFrom == 'remote':
 		print "Running as local"
 		ParseMe(inputFile, options)
+
+        #Parse the inputFile with the options from the dict
+        if getFileFrom == 'localpoc':
+                import socket,struct
+		print "Running as localPOC"
+                listOfAccessGroups,listOfHosts,listOfObjectGroups,listOfServiceObjects,listOfPortObjects,listOfProtocolObjects,listOfIcmpObjects,listOfAccessLists,listOfInterfaces,listOfTunnelGroups = ParseMe(inputFile, options)
+		#File to write out ACE config line and the POC to contact
+		outputFileSubnetToPOC = outputDir+'SubnetToPOC.txt'
+		fileSubnetToPOC = open(outputFileSubnetToPOC,'w')
+		outputFileSubnetToPOCdebug = outputDir+'SubnetToPOCdebug.txt'
+                fileSubnetToPOCdebug = open(outputFileSubnetToPOCdebug,'w')
+		#Load in the CSV File
+		with open('POC.csv') as csvfile:
+			pocDict = csv.DictReader(csvfile)
+			#for row in pocDict:
+			#print(row['ip'], row['subnet'], row['poc'])
+		
+
+		#Will have to cycle through all the ACE's in the ACL's and lookup against the imported CSV file
+		expandedSplit = []
+		for acl in listOfAccessLists:
+			for ace in acl.accessListSubRuleList:
+				#Print out the ACE we are working on
+				if doDebugDump == True:
+					fileSubnetToPOCdebug.write(ace.fullLine+"\n")
+				#For the Dest Section - Come back to this
+				if doDebugDump == True:
+					fileSubnetToPOCdebug.write("DEST SECTION LOOKUP\n")
+				#print "*********\n"
+				for x in ace.dest_ip_expanded:
+					if doDebugDump == True:
+                                                fileSubnetToPOCdebug.write(x+"\n")#TEMP THING
+                                        expandedSplit = x.split()
+                                        try:
+                                                if expandedSplit[1] == "255.255.255.255":
+                                                        if doDebugDump == True:
+                                                                fileSubnetToPOCdebug.write("IT's A HOST!\n")
+                                                if expandedSplit[1] != "255.255.255.255":
+                                                        if doDebugDump == True:
+                                                                fileSubnetToPOCdebug.write("IT's A SUBNET!\n")
+
+
+                                        except IndexError:
+                                                print "Index Error, skipping " + x
+                                                if doDebugDump == True:
+                                                        fileSubnetToPOCdebug.write("Can't Parse, skipping '" + x + "'\n")
+
+				#For the Source Section
+				if doDebugDump == True:
+					fileSubnetToPOCdebug.write("SOURCE SECTION LOOKUP\n")
+				for x in ace.source_ip_expanded:
+					if doDebugDump == True:
+						fileSubnetToPOCdebug.write(x+"\n")#TEMP THING
+					expandedSplit = x.split()
+					try:
+						if expandedSplit[1] == "255.255.255.255":
+							if doDebugDump == True:
+								fileSubnetToPOCdebug.write("IT's A HOST!\n")
+						if expandedSplit[1] != "255.255.255.255":
+							if doDebugDump == True:
+								fileSubnetToPOCdebug.write("IT's A SUBNET!\n")
+
+
+					except IndexError:
+						print "Index Error, skipping " + x
+						if doDebugDump == True:
+							fileSubnetToPOCdebug.write("Can't Parse, skipping '" + x + "'\n")
+				#End of ACE processing
+				if doDebugDump == True:
+					fileSubnetToPOCdebug.write("-----------------------------------------------------\n")
 
 	#Parse the inputFile with the options from the dict
 	if getFileFrom == 'localcompare':

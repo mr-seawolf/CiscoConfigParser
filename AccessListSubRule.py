@@ -61,6 +61,7 @@ class AccessListSubRule:
         destCols = 0
         destPortCols = 0
         basePos = 3
+	sourcePortCols = 0
         
         # START PROCESSING PROTOCOL SECTION
         if not specialCase:
@@ -97,11 +98,29 @@ class AccessListSubRule:
                 self.source = ruleSplit[basePos+protoCols+1] + " " + ruleSplit[basePos+protoCols+1+1]
             
             #Process Source Port section 'lt | gt | eq | neq | range port number or range
-            
+            modBasePos = basePos + protoCols + sourceCols
+            if (indexLimit > modBasePos):
+                if (ruleSplit[modBasePos+1] == 'lt' or ruleSplit[modBasePos+1] == 'gt' or ruleSplit[modBasePos+1] == 'eq' or ruleSplit[modBasePos+1] == 'neq'):
+                    sourcePortCols = 2
+                    self.source_operator = ruleSplit[modBasePos+1]
+                    self.source_port = ruleSplit[modBasePos+1+1]
+				#Following 4 lines will NOT work. Left in to make sure I don't try to make it work.
+                #elif (ruleSplit[modBasePos+1] == 'object-group'):
+                #    sourcePortCols = 2
+                #    self.source_portIsOG = True
+                #    self.source_port = ruleSplit[modBasePos+1+1]
+                elif (ruleSplit[modBasePos+1] == 'range'):
+                    sourcePortCols = 3
+                    self.source_operator = ruleSplit[modBasePos+1]
+                    self.source_port = ruleSplit[modBasePos+1+1] + ruleSplit[modBasePos+1+1+1]
+                #Not Good Here either.
+		#else:   #Assuming its a ICMP Type
+                #    sourcePortCols = 1
+                #    self.icmp_type = ruleSplit[modBasePos+1]
             # FILL ME IN!
                 
             #START PROCESSING DEST SECTION - Should be exactly the same as source processing
-            modBasePos = basePos + protoCols + sourceCols
+            modBasePos = basePos + protoCols + sourceCols + sourcePortCols
             if (indexLimit > modBasePos): 
                 if (ruleSplit[modBasePos+1] == 'any' or ruleSplit[modBasePos+1] == 'any4' ):
                     destCols = 1
@@ -122,7 +141,7 @@ class AccessListSubRule:
                     self.dest = ruleSplit[modBasePos+1] + " " + ruleSplit[modBasePos+1+1]
             
             #Process Dest Port Section 'lt | gt | eq | neq | range port number or range'
-            modBasePos = basePos + protoCols + sourceCols + destCols 
+            modBasePos = basePos + protoCols + sourceCols + sourcePortCols + destCols
             if (indexLimit > modBasePos):
                 if (ruleSplit[modBasePos+1] == 'lt' or ruleSplit[modBasePos+1] == 'gt' or ruleSplit[modBasePos+1] == 'eq' or ruleSplit[modBasePos+1] == 'neq'):
                     destPortCols = 2
@@ -172,38 +191,6 @@ class AccessListSubRule:
 	    outputFileDebugDump.write("dest_port_expanded=")
 	    outputFileDebugDump.writelines("%s " % x for x in self.dest_port_expanded)
 	    outputFileDebugDump.write("\n")         
-            
-
-	    #print self.fullLine
-	    #print self.protocol_expanded
-	    #print self.source_ip_expanded
-	    #print self.source_port_expanded
-	    #print self.dest_ip_expanded
-	    #print self.dest_port_expanded
-            #print "********END*********************"
-         
-         
-             
         
-# GOING WITH A DIFFERENT TECHINQUE - MAY DELTE THIS        
-#        if (ruleSplit[4] == 'ip' or ruleSplit[4] == 'tcp' or ruleSplit[4] == 'udp' or ruleSplit[4] == 'icmp'):
-#            self.protocol = ruleSplit[4]
-#            if ruleSplit[5] == 'any':   #Source Related
-#                sourceUsesColumns = 1
-#                self.source = 'any'
-#                if ruleSplit[6] == 'any':
-#                    self.dest = 'any'
-#            if ruleSplit[5] == 'host':   #Source Related
-#                sourceUsesColumns = 2
-#                self.source = ruleSplit[6] + " 255.255.255.255"
-#            if ruleSplit[5] == 'object-group':    #source related
-#                sourceUsesColumns = 2
-#                self.source = ruleSplit[6]
-#            else:        #Assuming its a network, be nice to have a check though - source related
-#                sourceUsesColumns = 2
-#                self.source = ruleSplit[5] + " " + ruleSplit[6]
-#                
-#        elif ruleSplit[4] == 'object-group':  #If protocol is a OG use this path
-#            self.protocol = ruleSplit[5]    
             
         
