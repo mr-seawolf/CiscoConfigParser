@@ -1,3 +1,7 @@
+
+4/14 the section of code for this function "def addressInNetwork(ip,net):" was taken from http://stackoverflow.com/questions/819355/how-can-i-check-if-an-ip-is-in-a-network-in-python by the handle named "Johnson".
+I have NOT fully tested it but it appeared to work enough for my current purpose. Long term is to use the netaddr module, but coudn't right now.
+
 4/1 - for the localcompare option I forgot to compare the required network/service objects to be merged with the orginal list in the primary firewall. Sure they would merge naturally into a live running ASA BUT there is an issue if service group objects ends in a tcp/udp/tcp-dup or not.
 If this exists;
 object-group service TESTGROUP-TCP  (You can add service-objects to this, NOT port-objects)
