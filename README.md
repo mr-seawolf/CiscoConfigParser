@@ -50,6 +50,23 @@ SVNuser=examplesvnuser
 SVNpassword=examplesvnpassword
 ```
 ```
+
+----------------------------------------------------------------------------------
+Sample Run (Only input lines are shown below)
+python main.py
+do a debug dump? y/n :y
+Should I push data to SQL DB? y/n :n
+Where to get file from? local/remote/rancidlist/localcompare : localcompare
+Enter local filename one: gwefwc2.txt
+Enter local filename two: gwnfwc2.txt
+Enter Device Type[cisco_asa / cisco_switch: cisco_asa
+ACL Choices on Primary Config: outside-in inside-out netmgmt PCAP
+Enter Primary Config ACL to compare with: outside-in
+ACL Choices on Secondary Config: outside inside mgt PCAP
+Enter Secondary Config ACL to compare against Primary: outside
+Enter the value to append to conflict ace/objects: -MERGEDIN
+------------------------------------------------------------------------------
+
 Primary = The first file inputted and is the config you will be merging into.
 Secondary = The second file inputted and is the config you will be merging from.
 
@@ -71,23 +88,33 @@ output-LargeACLs-CopyPaste.txt
 	Prints out an expanded list of all the ACEs across all the ACLs. But this time its in a format that you can copy and paste into a running config.
 ReqObjectGroupCopyPaste.txt
 	Prints out all the Object Groups that are required from the secondary config to make all the ACEs listed in ACL_NO_Match_List.txt valid. This is copy and pastable into a running config.
+ReqObjectGroupNoExits.txt
+	Same as above but without exit statements. NOT Copy and pastable into a running config.
 ReqObjectGroupCopyPasteAppended.txt
 	Prints out all the Object Groups(with an appended value) that are required from the secondary config to make all the ACEs listed in ACLNoMatchListAppended.txt valid. This is copy and pastable into a running config.
+ReqObjectGroupNoExitsAppended.txt	
+	Same as above but without exit statements. NOT Copy and pastable into a running config.
 ReqObjectGroupCopyPasteAppendedDebug.txt
 	Similar to ReqObjectGroupCopyPasteAppended.txt but with extra information and is NOT copy and pastable.
 ReqObjectGroupCopyPasteModified.txt
 	ReqObjectGroupCopyPaste.txt minus ReqObjectsNameConflicts.txt.
 	Prints out all the Object Groups that are required from the secondary config to make all the ACEs listed in ACL_NO_Match_List.txt valid BUT minus the object groups in the output ReqObjectsNameConflicts.txt. This is copy and pastable into a running config. There is potential for object group name conflicts when it involves service or port objects. Refer to "Name Conflict Issue" below.
+ReqObjectGroupNoExitsModified.txt
+	Same as above but without exit statements. NOT Copy and pastable into a running config.
 ReqObjectGroupCopyPasteModifiedDebug.txt
 	Similar to ReqObjectGroupCopyPasteModifiedDebug.txt but with additional information and is NOT copy and pastable.
 ReqObjectGroupDebug.txt
 	Similar to ReqObjectGroupCopyPaste.txt but with additional information and is NOT copy and pastable.
 ReqObjectsExactFullLineMatch.txt
 	Print out of all the Objects in the secondary config that have a match in the primary based on fullLine value. Minus the first line this is copy and pastable. 'fullLine' is a variable for many of the objects that contains the full line from the configuration. Created to help identify potential "Name Conflict Issues" (see below) and to eventually compare like named objects to see if the content is vastly different. You don't want to misuse an object that was named the same but was created for a different reason.
+ReqObjectsExactFullLineMatchNoExits.txt
+	Same as above but without exit statements. NOT Copy and pastable into a running config.
 ReqObjectsExactFullLineMatchDebug.txt
 	Similar to ReqObjectsExactFullLineMatch.txt but with additional information and is NOT copy and pastable.
 ReqObjectsNameConflicts.txt
 	All Objects in the Secondary config that have a name conflict in the Primary based on fullLine value. Refer to "Name Conflict Issue" below. These are conflicts that must be resolved. if you attempted to paste these into a running config it would fail.
+ReqObjectsNameConflictsNoExits.txt
+	Same as above but without exit statements. NOT Copy and pastable into a running config.
 ReqObjectsNameConflictsDebug.txt
 	Similar to ReqObjectsNameConflicts.txt but with more information.
 SECOND-debugDump.txt
