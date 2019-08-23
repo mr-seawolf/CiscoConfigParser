@@ -37,13 +37,13 @@ class ObjectNetwork:
     
     def printVar(self):
         if self.isHost or self.isNetwork:
-            print "name",self.name,"isHost=",self.isHost ," isNetwork=",self.isNetwork," IP= ",self.ipAddy," Subnet=",self.subnet
+            print("name",self.name,"isHost=",self.isHost ," isNetwork=",self.isNetwork," IP= ",self.ipAddy," Subnet=",self.subnet)
         
     def printClean(self):
-        print self.ipAddy + " " + self.subnet
+        print(self.ipAddy + " " + self.subnet)
         
     def printBareBones(self):
-        print self.ipAddy + " " + self.subnet
+        print(self.ipAddy + " " + self.subnet)
     
     def returnClean(self):
         return self.ipAddy + " " + self.subnet

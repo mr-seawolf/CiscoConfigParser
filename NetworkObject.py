@@ -53,16 +53,16 @@ class NetworkObject:
         self.natLineNum = var1    
     
     def printVar(self):
-        print "isHost=",self.isHost ," isNetwork=",self.isNetwork," IP= ",self.ipAddy," Subnet=",self.subnet
+        print("isHost=",self.isHost ," isNetwork=",self.isNetwork," IP= ",self.ipAddy," Subnet=",self.subnet)
     
     def writeToDebugLog(self,outputFileDebugDump):
         outputFileDebugDump.write("name="+self.name+" isHost="+str(self.isHost)+" isNetwork="+str(self.isNetwork)+" IP="+self.ipAddy+" Subnet="+self.subnet+"\n")
         outputFileDebugDump.write("      natType="+self.natType+" natSourceInt="+self.natSourceInterface+" natDestInt="+self.natDestInterface+" natTranslation="+self.natTranslation+"\n")
     def printClean(self):
-        print self.ipAddy + " " + self.subnet
+        print(self.ipAddy + " " + self.subnet)
         
     def printBareBones(self):
-        print self.ipAddy + " " + self.subnet
+        print(self.ipAddy + " " + self.subnet)
     
     def returnClean(self):
         return self.ipAddy + " " + self.subnet

@@ -13,13 +13,13 @@ class ProtocolObject:
         
           
     def printVar(self):
-        print "Protocol Object ",self.protocol
+        print("Protocol Object ",self.protocol)
         
     def printClean(self):
         buildString = 'protocol-object'
         if self.protocol != 'unknown':
             buildString = buildString + ' ' + self.protocol
-        print buildString
+        print(buildString)
         
     def returnClean(self):
         buildString = ''

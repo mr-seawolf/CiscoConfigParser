@@ -33,20 +33,20 @@ class InterfaceObject:
         lineSplit = line.split()
 
     def printVar(self):
-        print "interface="+self.interface+" accessVlan="+str(self.accessVlan)+" voiceVlan="+str(self.voiceVlan)+" spanningtreePortfastEnabled="+str(self.spanningtreePortfastEnabled)+" switchportMode="+self.switchportMode
+        print("interface="+self.interface+" accessVlan="+str(self.accessVlan)+" voiceVlan="+str(self.voiceVlan)+" spanningtreePortfastEnabled="+str(self.spanningtreePortfastEnabled)+" switchportMode="+self.switchportMode)
     
     def writeToDebugLog(self,outputFileDebugDump):
         outputFileDebugDump.write("interface="+self.interface+" accessVlan="+str(self.accessVlan)+" voiceVlan="+str(self.voiceVlan)+" spanningtreePortfastEnabled="+str(self.spanningtreePortfastEnabled)+" switchportMode="+self.switchportMode+"\n")
         
     def printClean(self):
-        print self.interface
-        print self.accessVlan
-        print self.voiceVlan
-        print self.spanningtreePortfastEnabled
-        print self.switchportMode
+        print(self.interface)
+        print(self.accessVlan)
+        print(self.voiceVlan)
+        print(self.spanningtreePortfastEnabled)
+        print(self.switchportMode)
         
     def printBareBones(self):
-        print self.interface
+        print(self.interface)
     
     def returnClean(self):
         return self.interface

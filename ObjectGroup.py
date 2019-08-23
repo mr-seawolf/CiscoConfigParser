@@ -34,9 +34,9 @@ class ObjectGroup:
         
     def printVar(self):
         if self.typeOfServiceGroup == 'service':
-            print self.name + " " + self.typeOfServiceGroup
+            print(self.name + " " + self.typeOfServiceGroup)
         else:
-            print self.name + " " + self.description
+            print(self.name + " " + self.description)
         for x in self.listOfNetworkObjects:
             x.printClean()
         for x in self.listOfServiceObjects:
@@ -48,15 +48,15 @@ class ObjectGroup:
         for x in self.listOfProtocolObjects:
             x.printVar()
         for x in self.listOfObjectGroups:
-            print x
+            print(x)
         #for x in self.listOfObjectGroups:
         #    x.printVar()
     
     def printClean(self):
         if self.typeOfServiceGroup == 'service':
-            print self.name + " " + self.typeOfServiceGroup
+            print(self.name + " " + self.typeOfServiceGroup)
         else:
-            print self.name + " " + self.description
+            print(self.name + " " + self.description)
         for x in self.listOfNetworkObjects:
             x.printClean()
         for x in self.listOfServiceObjects:
@@ -68,7 +68,7 @@ class ObjectGroup:
         for x in self.listOfProtocolObjects:
             x.printClean()
         for x in self.listOfObjectGroups:
-            print x
+            print(x)
     
     def printDirectItemsOnly(self):
         for x in self.listOfNetworkObjects:
@@ -110,8 +110,8 @@ class ObjectGroup:
     
     
     def printListCounts(self):
-        print self.name," NetworkObjects= ",len(self.listOfNetworkObjects), " ServiceObjects= ",len(self.listOfServiceObjects),\
-        " PortObjects= ",len(self.listOfPortObjects)," ICMP= ",len(self.listOfIcmpObjects)," Proto= ",len(self.listOfProtocolObjects)
+        print(self.name," NetworkObjects= ",len(self.listOfNetworkObjects), " ServiceObjects= ",len(self.listOfServiceObjects),\
+        " PortObjects= ",len(self.listOfPortObjects)," ICMP= ",len(self.listOfIcmpObjects)," Proto= ",len(self.listOfProtocolObjects))
         
     def writeToDebugLogDirectItemsOnly(self,outputFileDebugDump): 
         if self.typeOfServiceGroup == 'service':

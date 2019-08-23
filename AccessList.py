@@ -19,11 +19,11 @@ class AccessList:
         self.accessListSubRuleList = []
         
     def printVar(self):
-        print "ACL Name=",self.name," type=",self.type
+        print("ACL Name=",self.name," type=",self.type)
         
     def printClean(self):
-        print "PRINT CLEAN"
+        print("PRINT CLEAN")
         
     def printBareBones(self):
-        print "PRINT BAREBONES"
+        print("PRINT BAREBONES")
     

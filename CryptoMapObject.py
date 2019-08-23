@@ -29,7 +29,7 @@ class CryptoMapObject:
         self.priority = priority
         
     def printVar(self):
-        print "name="+self.name+" peer="+str(self.peer)+" matchAddressACL="+str(self.matchAddressACL)+" priority="+str(self.priority)
+        print("name="+self.name+" peer="+str(self.peer)+" matchAddressACL="+str(self.matchAddressACL)+" priority="+str(self.priority))
     
     def writeToDebugLog(self,outputFileDebugDump):
         outputFileDebugDump.write("name="+self.name+" peer="+str(self.peer)+" matchAddressACL="+str(self.matchAddressACL)+" priority="+str(self.priority)+"\n")

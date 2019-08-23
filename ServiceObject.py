@@ -132,8 +132,8 @@ class ServiceObject:
                 self.icmpType = ruleSplit[2]
             
     def printVar(self):
-        print "Name ", self.name
-        print "Service Object ", self.protocol,self.icmpType,self.dest_operator,self.dest_port,self.dest_startRange,self.dest_stopRange        
+        print("Name ", self.name)
+        print("Service Object ", self.protocol,self.icmpType,self.dest_operator,self.dest_port,self.dest_startRange,self.dest_stopRange)        
         
     def printClean(self):
         buildString = 'service-object'
@@ -149,7 +149,7 @@ class ServiceObject:
             buildString = buildString + ' ' + self.dest_startRange
         if self.stopRange != 'unknown':
             buildString = buildString + ' ' + self.dest_stopRange
-        print buildString    
+        print(buildString)    
               
     def returnClean(self):
         buildString = ''

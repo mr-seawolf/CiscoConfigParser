@@ -13,13 +13,13 @@ class IcmpObject:
         
           
     def printVar(self):
-        print "ICMP Object ",self.icmpType
+        print("ICMP Object ",self.icmpType)
         
     def printClean(self):
         buildString = 'icmp-object'
         if self.icmpType != 'unknown':
             buildString = buildString + ' ' + self.icmpType
-        print buildString
+        print(buildString)
         
     def returnClean(self):
         buildString = ''

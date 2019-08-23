@@ -22,7 +22,7 @@ class TunnelGroupObject:
         self.groupPolicy = groupPolicy
         
     def printVar(self):
-        print "peer="+self.peer+" type="+str(self.type)+" groupPolicy="+str(self.groupPolicy)
+        print("peer="+self.peer+" type="+str(self.type)+" groupPolicy="+str(self.groupPolicy))
     
     def writeToDebugLog(self,outputFileDebugDump):
         outputFileDebugDump.write("peer="+self.peer+" type="+str(self.type)+" groupPolicy="+str(self.groupPolicy)+"\n")

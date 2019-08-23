@@ -21,7 +21,7 @@ class PortObject:
                 self.stopRange = lineList[3]
           
     def printVar(self):
-        print "PortObject ",self.operator,self.port,self.startRange,self.stopRange
+        print("PortObject ",self.operator,self.port,self.startRange,self.stopRange)
         
     def printClean(self):
         buildString = 'port-object'
@@ -33,7 +33,7 @@ class PortObject:
             buildString = buildString + ' ' + self.startRange
         if self.stopRange != 'unknown':
             buildString = buildString + ' ' + self.stopRange
-        print buildString
+        print(buildString)
         
     def returnClean(self):
         buildString = ''

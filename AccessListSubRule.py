@@ -61,7 +61,7 @@ class AccessListSubRule:
         destCols = 0
         destPortCols = 0
         basePos = 3
-	sourcePortCols = 0
+        sourcePortCols = 0
         
         # START PROCESSING PROTOCOL SECTION
         if not specialCase:
@@ -73,10 +73,9 @@ class AccessListSubRule:
             elif (ruleSplit[4] == 'object'):
                 protoCols = 2
                 self.protocolIsO = True
-	    else:
-		protoCols = 1            
-
-	    self.protocol = ruleSplit[basePos+protoCols]
+            else:
+                protoCols = 1            
+                self.protocol = ruleSplit[basePos+protoCols]
             
             # START PROCESSING SOURCE SECTION
             if (ruleSplit[basePos+protoCols+1] == 'any' or ruleSplit[basePos+protoCols+1] == 'any4'):
@@ -172,25 +171,25 @@ class AccessListSubRule:
         
         
     def writeToDebugLog(self,outputFileDebugDump): 
-            outputFileDebugDump.write("accessListName ="+self.accessListName +" accessListType="+self.accessListType+" typeOfAccess="+self.typeOfAccess+" specialCaseType="+self.specialCaseType+"\n")
-            outputFileDebugDump.write("protocol="+self.protocol+" protocolIsOG="+str(self.protocolIsOG)+" protocolIsO="+str(self.protocolIsO)+" icmp_type="+self.icmp_type+"\n")
-            outputFileDebugDump.write("source="+self.source+" sourceIsOG="+str(self.sourceIsOG)+" sourceIsO="+str(self.sourceIsO)+" source_operator="+self.source_operator+" source_port="+self.source_port+" source_portIsOG="+str(self.source_portIsOG)+" source_portIsO"+str(self.source_portIsO)+"\n")
-            outputFileDebugDump.write("dest="+self.dest+" destIsOG="+str(self.destIsOG)+" destIsO="+str(self.destIsO)+" dest_operator="+self.dest_operator+" dest_port="+self.dest_port+" dest_portIsOG="+str(self.dest_portIsOG)+" dest_portIsO"+str(self.dest_portIsO)+"\n")
-	    outputFileDebugDump.write("protocol_expanded=")
-	    outputFileDebugDump.writelines("%s " % x for x in self.protocol_expanded)
-	    outputFileDebugDump.write("\n")
-	    outputFileDebugDump.write("source_ip_expanded=")
-	    outputFileDebugDump.writelines("%s " % x for x in self.source_ip_expanded)
-	    outputFileDebugDump.write("\n")
-	    outputFileDebugDump.write("source_port_expanded=")
-	    outputFileDebugDump.writelines("%s " % x for x in self.source_port_expanded)
-	    outputFileDebugDump.write("\n")
-	    outputFileDebugDump.write("dest_ip_expanded=")
-	    outputFileDebugDump.writelines("%s " % x for x in self.dest_ip_expanded)
-            outputFileDebugDump.write("\n")
-	    outputFileDebugDump.write("dest_port_expanded=")
-	    outputFileDebugDump.writelines("%s " % x for x in self.dest_port_expanded)
-	    outputFileDebugDump.write("\n")         
+        outputFileDebugDump.write("accessListName ="+self.accessListName +" accessListType="+self.accessListType+" typeOfAccess="+self.typeOfAccess+" specialCaseType="+self.specialCaseType+"\n")
+        outputFileDebugDump.write("protocol="+self.protocol+" protocolIsOG="+str(self.protocolIsOG)+" protocolIsO="+str(self.protocolIsO)+" icmp_type="+self.icmp_type+"\n")
+        outputFileDebugDump.write("source="+self.source+" sourceIsOG="+str(self.sourceIsOG)+" sourceIsO="+str(self.sourceIsO)+" source_operator="+self.source_operator+" source_port="+self.source_port+" source_portIsOG="+str(self.source_portIsOG)+" source_portIsO"+str(self.source_portIsO)+"\n")
+        outputFileDebugDump.write("dest="+self.dest+" destIsOG="+str(self.destIsOG)+" destIsO="+str(self.destIsO)+" dest_operator="+self.dest_operator+" dest_port="+self.dest_port+" dest_portIsOG="+str(self.dest_portIsOG)+" dest_portIsO"+str(self.dest_portIsO)+"\n")
+        outputFileDebugDump.write("protocol_expanded=")
+        outputFileDebugDump.writelines("%s " % x for x in self.protocol_expanded)
+        outputFileDebugDump.write("\n")
+        outputFileDebugDump.write("source_ip_expanded=")
+        outputFileDebugDump.writelines("%s " % x for x in self.source_ip_expanded)
+        outputFileDebugDump.write("\n")
+        outputFileDebugDump.write("source_port_expanded=")
+        outputFileDebugDump.writelines("%s " % x for x in self.source_port_expanded)
+        outputFileDebugDump.write("\n")
+        outputFileDebugDump.write("dest_ip_expanded=")
+        outputFileDebugDump.writelines("%s " % x for x in self.dest_ip_expanded)
+        outputFileDebugDump.write("\n")
+        outputFileDebugDump.write("dest_port_expanded=")
+        outputFileDebugDump.writelines("%s " % x for x in self.dest_port_expanded)
+        outputFileDebugDump.write("\n")         
         
             
         

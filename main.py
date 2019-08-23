@@ -6,7 +6,7 @@ Created on Jun 29, 2013
 
 '''
 
-from ConfigParser import SafeConfigParser 
+import configparser
 #import pysvn
 import getpass
 #import MySQLdb
@@ -394,7 +394,8 @@ def ParseMe(inputFile, options):
 				x.listOfRules.append(line)
 		
 		elif commandName == 'hostname':
-				hostname.append(lineList[1])
+			hostname.append(lineList[1])
+			
 		#Handle interface command
 		elif commandName == 'interface':
 			for x in listOfInterfaces:
@@ -996,7 +997,7 @@ def ParseMe(inputFile, options):
     		return ipaddr & netmask == netaddr & netmask
 
 
-	print "****************START PARSING CONFIG****************************"
+	print("****************START PARSING CONFIG****************************")
 	#START PARSING THE inputFile
 	for line in inputFile:
 		linesProcessed += 1
@@ -1097,8 +1098,8 @@ def ParseMe(inputFile, options):
 			row=cur.fetchone()
 			if row[0] > lastestRevisionNumberFoundInDB:
 				lastestRevisionNumberFoundInDB = row[0]
-		print "latest revision in DB is " + str(lastestRevisionNumberFoundInDB)	#A long value
-		print "Device Repo revision number is " + str(deviceRepoRevisionNumber)	#an int value
+		print("latest revision in DB is " + str(lastestRevisionNumberFoundInDB))	#A long value
+		print("Device Repo revision number is " + str(deviceRepoRevisionNumber))	#an int value
 		outputFileLogging.write(deviceConfig +": Latest revision number found in Database is " + str(lastestRevisionNumberFoundInDB) + "\n")
 		outputFileLogging.write(deviceConfig +": Revision number for parsed config is " + str(deviceRepoRevisionNumber) + "\n")
 		#If this is a local file we want to force a higher new revision number so it updates the DB
@@ -1106,11 +1107,11 @@ def ParseMe(inputFile, options):
 			deviceRepoRevisionNumber = lastestRevisionNumberFoundInDB + 1
 			outputFileLogging.write(deviceConfig +": Local file load : force revision increment to " + str(deviceRepoRevisionNumber) + "\n")
 		if (lastestRevisionNumberFoundInDB == deviceRepoRevisionNumber):
-			print "Latest revision number found in DB is equal to the device repo version: No Upload to DB"
+			print("Latest revision number found in DB is equal to the device repo version: No Upload to DB")
 			outputFileLogging.write(deviceConfig +": Latest revision is in the DB : No Upload to DB \n")
 			isLastestRevisionNumberFoundInDB = True
 		else: 
-			print "Latest revision is not found in the DB : proceed with DB update"
+			print("Latest revision is not found in the DB : proceed with DB update")
 			outputFileLogging.write(deviceConfig +": Latest revision is not found in the DB : proceed with DB update \n")
 		
 		#Load stuff in the Database		
@@ -1122,37 +1123,37 @@ def ParseMe(inputFile, options):
 				for y in x.accessListSubRuleList:
 					SqlUploadAclSubrules(y,cur,listOfHosts,listOfObjectGroups,hostname[0])
 					count = count + 1
-			print str(count) + "  ACLs SQL UPLOADED"
+			print(str(count) + "  ACLs SQL UPLOADED")
 			outputFileLogging.write(deviceConfig + ": " + str(count) + " ACLs SQL UPLOADED\n")
 			#Load the objects from the listOfInterfaces	
 			for x in listOfInterfaces:
 				SqlUploadInterfaces(x,cur,hostname[0],listOfInterfaces)
 				countInterfaces = countInterfaces + 1
-			print str(countInterfaces) + " Interfaces SQL UPLOADED"
+			print(str(countInterfaces) + " Interfaces SQL UPLOADED")
 			outputFileLogging.write(deviceConfig + ": " + str(countInterfaces) + " Interfaces SQL UPLOADED\n")
 			
 				
 			if isAlreadyInDB:
-				print "The Device is already in DB, updating the revision numbers to " + str(deviceRepoRevisionNumber)
+				print("The Device is already in DB, updating the revision numbers to " + str(deviceRepoRevisionNumber))
 				#cur.execute("UPDATE parsed_revisions SET last_parsed_revision=44 WHERE device_repo_name='10.45.6.10' " ) 
 				cur.execute("UPDATE parsed_revisions SET last_parsed_revision=%s WHERE device_repo_name='%s' " % (deviceRepoRevisionNumber,deviceConfig)) 
-				print cur.rowcount
+				print(cur.rowcount)
 				con.commit()
 			else:
-				print "Device Not found in DB - Adding it"
+				print("Device Not found in DB - Adding it")
 				cur.execute("INSERT INTO parsed_revisions (device_repo_name,last_parsed_revision) values ('%s','%d')" % (deviceConfig,deviceRepoRevisionNumber)) 
 				con.commit()
 				if count > 0:
-					print "Clean Up DB for old revisions"
+					print("Clean Up DB for old revisions")
 					#print deviceConfig
 		with con:
 			cur.execute("DELETE FROM "+DBschema+".access_list_subrules where device_repo_name = %s AND revision_number < %s",(deviceConfig,deviceRepoRevisionNumber))
 			outputFileLogging.write(deviceConfig + ": " + str(cur.rowcount)+" Rows Deleted From ACL Table\n")
-			print "Deleted " + str(cur.rowcount) + " Rows From ACL Table"  	
+			print("Deleted " + str(cur.rowcount) + " Rows From ACL Table")  	
 		with con:
 			cur.execute("DELETE FROM "+DBschema+".interfaces where device_repo_name = %s AND revision_number < %s",(deviceConfig,deviceRepoRevisionNumber))
 			outputFileLogging.write(deviceConfig + ": " + str(cur.rowcount)+" Rows Deleted From Interfaces Table\n")
-			print "Deleted " + str(cur.rowcount) + " Rows From Interfaces Table" 	
+			print("Deleted " + str(cur.rowcount) + " Rows From Interfaces Table") 	
 	
 	if doDebugDump == True:
 		outputFileDebugDump.write('STARTING DEBUG DUMP')
@@ -1271,11 +1272,11 @@ def ParseMe(inputFile, options):
 					outputFileLargeACLsForCopyAndPaste.write(" " + match.group() + '\n')
 		outputFileLargeACLsForCopyAndPaste.write('\n')
 	
-	print "Hostname = " + hostname[0]
-	print "Lines Processed = " + str(linesProcessed)
-	print "Lines Ignored = " + str(linesIgnored) 
-	print "lines total = " + str(linesTotal)
-	print "****************STOP PARSING CONFIG****************"
+	print("Hostname = " + hostname[0])
+	print("Lines Processed = " + str(linesProcessed))
+	print("Lines Ignored = " + str(linesIgnored)) 
+	print("lines total = " + str(linesTotal))
+	print("****************STOP PARSING CONFIG****************")
 	return(listOfAccessGroups,listOfHosts,listOfObjectGroups,listOfServiceObjects,listOfPortObjects,listOfProtocolObjects,listOfIcmpObjects,listOfAccessLists,listOfInterfaces,listOfTunnelGroups)
 
 def CompareProtocolExpandedLists(list1,list2):
@@ -1339,8 +1340,8 @@ def printCopyAndPasteOfSingleObject(fileWrite,fileWriteDebug,object,boolean):
 		fileReqObjectGroupDebugDump.write("listOfPortObjects Length: "+str(len(y.listOfPortObjects))+"\n")
 		fileReqObjectGroupDebugDump.write("listOfProtocolObjects Length: "+str(len(y.listOfProtocolObjects))+"\n")
 	fileReqObjectGroupCopyPaste.write(y.fullLine)
-        if doDebugDump == True:
-       		fileReqObjectGroupDebugDump.write(y.fullLine)
+	if doDebugDump == True:
+			fileReqObjectGroupDebugDump.write(y.fullLine)
 	if len(y.listOfNetworkObjects) > 0:
 		for z in y.listOfNetworkObjects:
 			fileReqObjectGroupCopyPaste.write(z.fullLine)
@@ -1408,23 +1409,23 @@ def main():
 	
 	def get_login(realm, username, may_save):
 		try:
-			svnRealm = configParser.get('SVNconfig','SVNrealm')
+			svnRealm = aConfigParser.get('SVNconfig','SVNrealm')
 		except:
-			print "Something bad happened when reading conf.ini SVNConfig section. Just throwing my hands up"
+			print("Something bad happened when reading conf.ini SVNConfig section. Just throwing my hands up")
 		retcode = True
 		realm = svnRealm
-		username = raw_input("Enter username: ")
+		username = input("Enter username: ")
 		password = getpass.getpass()
 		save = False
 		return retcode,username,password,save
 	
 	def get_login2(realm, username, may_save):
 		try:
-			rancidUser = configParser.get('SVNconfig','SVNuser')
-			rancidPassword = configParser.get('SVNconfig','SVNpassword')
-			svnRealm = configParser.get('SVNconfig','SVNrealm')
+			rancidUser = aConfigParser.get('SVNconfig','SVNuser')
+			rancidPassword = aConfigParser.get('SVNconfig','SVNpassword')
+			svnRealm = aConfigParser.get('SVNconfig','SVNrealm')
 		except:
-			print "Something bad happened when reading conf.ini SVNConfig section. Just throwing my hands up"
+			print("Something bad happened when reading conf.ini SVNConfig section. Just throwing my hands up")
 		retcode = True
 		realm = svnRealm
 		username = rancidUser
@@ -1435,21 +1436,21 @@ def main():
 	
 	
 	
-	configParser = SafeConfigParser()
+	aConfigParser = configparser.RawConfigParser()
 	try:
-		configParser.read('conf.ini')
-		programMode = configParser.get('Basic','Mode')
-		installedDir = configParser.get('Basic','InstalledDir')
-		logDir = configParser.get('Basic','LogDir')
-		tempDir = configParser.get('Basic','TempDir')
-		outputDir = configParser.get('Basic','outputDir')
-		DBhost = configParser.get('Database','DBhost')
-		DBschema = configParser.get('Database','DBschema')
-		DBuser = configParser.get('Database','DBuser')
-		DBpassword = configParser.get('Database','DBpassword')
+		aConfigParser.read('conf.ini')
+		programMode = aConfigParser.get('Basic','Mode')
+		installedDir = aConfigParser.get('Basic','InstalledDir')
+		logDir = aConfigParser.get('Basic','LogDir')
+		tempDir = aConfigParser.get('Basic','TempDir')
+		outputDir = aConfigParser.get('Basic','outputDir')
+		DBhost = aConfigParser.get('Database','DBhost')
+		DBschema = aConfigParser.get('Database','DBschema')
+		DBuser = aConfigParser.get('Database','DBuser')
+		DBpassword = aConfigParser.get('Database','DBpassword')
 		
 	except:
-		print "Something bad happened when reading conf.ini. Failing to local mode"	
+		print("Something bad happened when reading conf.ini. Failing to local mode")	
 		programMode = 'Local'
 	
 	options = {}
@@ -1470,18 +1471,18 @@ def main():
 	
 	#Based on programMode in conf.ini set or ask controlling variables.
 	if programMode == 'All':
-		debugDump = raw_input('do a debug dump? y/n :')
+		debugDump = input('do a debug dump? y/n :')
 		if debugDump == 'y':
 			doDebugDump = True
 		else: doDebugDump = False
-		pushToSQL = raw_input("Should I push data to SQL DB? y/n :")
+		pushToSQL = input("Should I push data to SQL DB? y/n :")
 		if pushToSQL == 'y':
 			doSQLStuff = True
 			import MySQLdb #If not libaries not available, we will crash
 		else: doSQLStuff = False
-		getFileFrom = raw_input("Where to get file from? local/remote/rancidlist/localcompare : ")
+		getFileFrom = input("Where to get file from? local/remote/rancidlist/localcompare : ")
 	elif programMode == 'Local':
-		debugDump = raw_input('do a debug dump? y/n :')
+		debugDump = input('do a debug dump? y/n :')
 		if debugDump == 'y':
 			doDebugDump = True
 		else: doDebugDump = False
@@ -1496,39 +1497,39 @@ def main():
 	
 	# Based On set program control variables do some stuff
 	if getFileFrom == 'local':
-		input1 = raw_input("Enter local filename: ")
+		input1 = input("Enter local filename: ")
 		inputFile = open(installedDir+input1 , 'r')
 		options['deviceConfig'] = input1
-		deviceType = raw_input("Enter Device Type[cisco_asa / cisco_switch: ")
+		deviceType = input("Enter Device Type[cisco_asa / cisco_switch: ")
 		options['deviceType'] = deviceType
 		deviceRepoRevisionNumber = 0
 	if getFileFrom == 'localpoc':
-                input1 = raw_input("Enter local filename: ")
+                input1 = input("Enter local filename: ")
                 inputFile = open(installedDir+input1 , 'r')
                 options['deviceConfig'] = input1
-                deviceType = raw_input("Enter Device Type[cisco_asa / cisco_switch: ")
+                deviceType = input("Enter Device Type[cisco_asa / cisco_switch: ")
                 options['deviceType'] = deviceType
                 deviceRepoRevisionNumber = 0 
 	if getFileFrom == 'localcompare':
-		input1 = raw_input("Enter local filename one: ")
-                inputFile = open(installedDir+input1 , 'r')
+		input1 = input("Enter local filename one: ")
+		inputFile = open(installedDir+input1 , 'r')
 		options['deviceConfig'] = input1
-		input2 = raw_input("Enter local filename two: ")
+		input2 = input("Enter local filename two: ")
 		secondInputFile = open(installedDir+input2 , 'r')
-                options['deviceConfig2'] = input2
-                deviceType = raw_input("Enter Device Type[cisco_asa / cisco_switch: ")
-                options['deviceType'] = deviceType
-                deviceRepoRevisionNumber = 0
+		options['deviceConfig2'] = input2
+		deviceType = input("Enter Device Type[cisco_asa / cisco_switch: ")
+		options['deviceType'] = deviceType
+		deviceRepoRevisionNumber = 0
 	elif getFileFrom == 'remote':
 		import pysvn #libaries better be available, or we will crash
 		try:
-			svnRepo = configParser.get('SVNconfig','SVNrepo')
+			svnRepo = aConfigParser.get('SVNconfig','SVNrepo')
 		except:
-			print "Something bad happened when reading conf.ini SVNconfig Section. Just throwing my hands up"
+			print("Something bad happened when reading conf.ini SVNconfig Section. Just throwing my hands up")
 		#PYSVN Stuff
-		deviceConfig = raw_input("Device IP Address: ")
+		deviceConfig = input("Device IP Address: ")
 		options['deviceConfig'] = deviceConfig
-		deviceType = raw_input("Enter Device Type[cisco_asa / cisco_switch: ")
+		deviceType = input("Enter Device Type[cisco_asa / cisco_switch: ")
 		options['deviceType'] = deviceType
 		client = pysvn.Client()
 		client.callback_ssl_server_trust_prompt = ssl_server_trust_prompt
@@ -1549,7 +1550,7 @@ def main():
 		info = client.info2(svnRepo+deviceConfig,revision=rev,recurse=False)
 		revno = info[0][1].last_changed_rev.number
 		#revno = info[0][1].rev.number # revision number as an integer
-		print "lastChange Revision Number = " + str(revno)
+		print("lastChange Revision Number = " + str(revno))
 		deviceRepoRevisionNumber = revno
 		#Pull the device config into a temporary file for parsing
 		client.export(svnRepo+deviceConfig, installedDir+"tempConfigFile"+deviceConfig+".tmp")
@@ -1573,86 +1574,86 @@ def main():
 		
 	#Parse the inputFile with the options from the dict
 	if getFileFrom == 'local' or getFileFrom == 'remote':
-		print "Running as local"
+		print("Running as local")
 		ParseMe(inputFile, options)
 
         #Parse the inputFile with the options from the dict
-        if getFileFrom == 'localpoc':
-                import socket,struct
-		print "Running as localPOC"
-                listOfAccessGroups,listOfHosts,listOfObjectGroups,listOfServiceObjects,listOfPortObjects,listOfProtocolObjects,listOfIcmpObjects,listOfAccessLists,listOfInterfaces,listOfTunnelGroups = ParseMe(inputFile, options)
-		#File to write out ACE config line and the POC to contact
-		outputFileSubnetToPOC = outputDir+'SubnetToPOC.txt'
-		fileSubnetToPOC = open(outputFileSubnetToPOC,'w')
-		outputFileSubnetToPOCdebug = outputDir+'SubnetToPOCdebug.txt'
-                fileSubnetToPOCdebug = open(outputFileSubnetToPOCdebug,'w')
-		#Load in the CSV File
-		with open('POC.csv') as csvfile:
-			pocDict = csv.DictReader(csvfile)
-			#for row in pocDict:
-			#print(row['ip'], row['subnet'], row['poc'])
+		if getFileFrom == 'localpoc':
+			import socket,struct
+			print("Running as localPOC")
+			listOfAccessGroups,listOfHosts,listOfObjectGroups,listOfServiceObjects,listOfPortObjects,listOfProtocolObjects,listOfIcmpObjects,listOfAccessLists,listOfInterfaces,listOfTunnelGroups = ParseMe(inputFile, options)
+			#File to write out ACE config line and the POC to contact
+			outputFileSubnetToPOC = outputDir+'SubnetToPOC.txt'
+			fileSubnetToPOC = open(outputFileSubnetToPOC,'w')
+			outputFileSubnetToPOCdebug = outputDir+'SubnetToPOCdebug.txt'
+			fileSubnetToPOCdebug = open(outputFileSubnetToPOCdebug,'w')
+			#Load in the CSV File
+			with open('POC.csv') as csvfile:
+				pocDict = csv.DictReader(csvfile)
+				#for row in pocDict:
+				#print(row['ip'], row['subnet'], row['poc'])
 		
 
-		#Will have to cycle through all the ACE's in the ACL's and lookup against the imported CSV file
-		expandedSplit = []
-		for acl in listOfAccessLists:
-			for ace in acl.accessListSubRuleList:
-				#Print out the ACE we are working on
-				if doDebugDump == True:
-					fileSubnetToPOCdebug.write(ace.fullLine+"\n")
-				#For the Dest Section - Come back to this
-				if doDebugDump == True:
-					fileSubnetToPOCdebug.write("DEST SECTION LOOKUP\n")
-				#print "*********\n"
-				for x in ace.dest_ip_expanded:
+			#Will have to cycle through all the ACE's in the ACL's and lookup against the imported CSV file
+			expandedSplit = []
+			for acl in listOfAccessLists:
+				for ace in acl.accessListSubRuleList:
+					#Print out the ACE we are working on
 					if doDebugDump == True:
-                                                fileSubnetToPOCdebug.write(x+"\n")#TEMP THING
-                                        expandedSplit = x.split()
-                                        try:
-                                                if expandedSplit[1] == "255.255.255.255":
-                                                        if doDebugDump == True:
-                                                                fileSubnetToPOCdebug.write("IT's A HOST!\n")
-                                                if expandedSplit[1] != "255.255.255.255":
-                                                        if doDebugDump == True:
-                                                                fileSubnetToPOCdebug.write("IT's A SUBNET!\n")
-
-
-                                        except IndexError:
-                                                print "Index Error, skipping " + x
-                                                if doDebugDump == True:
-                                                        fileSubnetToPOCdebug.write("Can't Parse, skipping '" + x + "'\n")
-
-				#For the Source Section
-				if doDebugDump == True:
-					fileSubnetToPOCdebug.write("SOURCE SECTION LOOKUP\n")
-				for x in ace.source_ip_expanded:
+						fileSubnetToPOCdebug.write(ace.fullLine+"\n")
+					#For the Dest Section - Come back to this
 					if doDebugDump == True:
-						fileSubnetToPOCdebug.write(x+"\n")#TEMP THING
-					expandedSplit = x.split()
-					try:
-						if expandedSplit[1] == "255.255.255.255":
-							if doDebugDump == True:
-								fileSubnetToPOCdebug.write("IT's A HOST!\n")
-						if expandedSplit[1] != "255.255.255.255":
-							if doDebugDump == True:
-								fileSubnetToPOCdebug.write("IT's A SUBNET!\n")
-
-
-					except IndexError:
-						print "Index Error, skipping " + x
+						fileSubnetToPOCdebug.write("DEST SECTION LOOKUP\n")
+					#print "*********\n"
+					for x in ace.dest_ip_expanded:
 						if doDebugDump == True:
-							fileSubnetToPOCdebug.write("Can't Parse, skipping '" + x + "'\n")
-				#End of ACE processing
-				if doDebugDump == True:
-					fileSubnetToPOCdebug.write("-----------------------------------------------------\n")
+							fileSubnetToPOCdebug.write(x+"\n")#TEMP THING
+						expandedSplit = x.split()
+						try:
+							if expandedSplit[1] == "255.255.255.255":
+								if doDebugDump == True:
+									fileSubnetToPOCdebug.write("IT's A HOST!\n")
+							if expandedSplit[1] != "255.255.255.255":
+								if doDebugDump == True:
+									fileSubnetToPOCdebug.write("IT's A SUBNET!\n")
+	
+	
+						except IndexError:
+							print("Index Error, skipping " + x)
+							if doDebugDump == True:
+								fileSubnetToPOCdebug.write("Can't Parse, skipping '" + x + "'\n")
+	
+					#For the Source Section
+					if doDebugDump == True:
+						fileSubnetToPOCdebug.write("SOURCE SECTION LOOKUP\n")
+					for x in ace.source_ip_expanded:
+						if doDebugDump == True:
+							fileSubnetToPOCdebug.write(x+"\n")#TEMP THING
+						expandedSplit = x.split()
+						try:
+							if expandedSplit[1] == "255.255.255.255":
+								if doDebugDump == True:
+									fileSubnetToPOCdebug.write("IT's A HOST!\n")
+							if expandedSplit[1] != "255.255.255.255":
+								if doDebugDump == True:
+									fileSubnetToPOCdebug.write("IT's A SUBNET!\n")
+	
+	
+						except IndexError:
+							print("Index Error, skipping " + x)
+							if doDebugDump == True:
+								fileSubnetToPOCdebug.write("Can't Parse, skipping '" + x + "'\n")
+					#End of ACE processing
+					if doDebugDump == True:
+						fileSubnetToPOCdebug.write("-----------------------------------------------------\n")
 
 	#Parse the inputFile with the options from the dict
 	if getFileFrom == 'localcompare':
-		print "Running as localcompare"
+		print("Running as localcompare")
 		#Line below is the orginal basic parse
 		#ParseMe(inputFile, options)
 		#Changing ParseMe to return multiple lists
- 		listOfAccessGroups1,listOfHosts1,listOfObjectGroups1,listOfServiceObjects1,listOfPortObjects1,listOfProtocolObjects1,listOfIcmpObjects1,listOfAccessLists1,listOfInterfaces1,listOfTunnelGroups1 = ParseMe(inputFile, options)
+		listOfAccessGroups1,listOfHosts1,listOfObjectGroups1,listOfServiceObjects1,listOfPortObjects1,listOfProtocolObjects1,listOfIcmpObjects1,listOfAccessLists1,listOfInterfaces1,listOfTunnelGroups1 = ParseMe(inputFile, options)
                 # Changing options for the second file outputs and inputs
 		outputFile = outputDir+"SECOND-output.txt"
 		outputFileLargeACLs = outputDir+'SECOND-output-LargeACLs.txt'
@@ -1682,28 +1683,28 @@ def main():
 		fileReqObjectGroupDebugDump = open(outputFileReqObjectGroupDebugDump,'w')
 		fileReqObjectGroupCopyPaste = open(outputFileReqObjectGroupCopyPaste,'w')
 		listOfAccessGroups2,listOfHosts2,listOfObjectGroups2,listOfServiceObjects2,listOfPortObjects2,listOfProtocolObjects2,listOfIcmpObjects2,listOfAccessLists2,listOfInterfaces2,listOfTunnelGroups2 = ParseMe(secondInputFile, options)		
-		print "Count for listOfAccessGroups: ", len(listOfAccessGroups1)
-		print "Count for listOfHosts: ", len(listOfHosts1)
-		print "Count for listOfObjectGroups: ", len(listOfObjectGroups1)
-		print "Count for listOfServiceObjects: ", len(listOfServiceObjects1)
-		print "Count for listOfPortObjects: ", len(listOfPortObjects1)
-		print "Count for listOfProtocolObjects: ", len(listOfProtocolObjects1)
-		print "Count for listOfIcmpObjects: ", len(listOfIcmpObjects1)
-		print "Count for listOfAccessLists: ", len(listOfAccessLists1)
-		print "Count for listOfInterfaces: ", len(listOfInterfaces1)
-		print "Count for listOfTunnelGroups: ", len(listOfTunnelGroups1)
-		print "Count for listOfAccessGroups2: ", len(listOfAccessGroups2)
-		print "Count for listOfHosts2: ", len(listOfHosts2)
-		print "Count for listOfObjectGroups2: ", len(listOfObjectGroups2)
-		print "Count for listOfServiceObjects2: ", len(listOfServiceObjects2)
-		print "Count for listOfPortObjects2: ", len(listOfPortObjects2)
-		print "Count for listOfProtocolObjects2: ", len(listOfProtocolObjects2)
-		print "Count for listOfIcmpObjects2: ", len(listOfIcmpObjects2)
-		print "Count for listOfAccessLists2: ", len(listOfAccessLists2)
-		print "Count for listOfInterfaces2: ", len(listOfInterfaces2)
-		print "Count for listOfTunnelGroups2: ", len(listOfTunnelGroups2)
+		print("Count for listOfAccessGroups: ", len(listOfAccessGroups1))
+		print("Count for listOfHosts: ", len(listOfHosts1))
+		print("Count for listOfObjectGroups: ", len(listOfObjectGroups1))
+		print("Count for listOfServiceObjects: ", len(listOfServiceObjects1))
+		print("Count for listOfPortObjects: ", len(listOfPortObjects1))
+		print("Count for listOfProtocolObjects: ", len(listOfProtocolObjects1))
+		print("Count for listOfIcmpObjects: ", len(listOfIcmpObjects1))
+		print("Count for listOfAccessLists: ", len(listOfAccessLists1))
+		print("Count for listOfInterfaces: ", len(listOfInterfaces1))
+		print("Count for listOfTunnelGroups: ", len(listOfTunnelGroups1))
+		print("Count for listOfAccessGroups2: ", len(listOfAccessGroups2))
+		print("Count for listOfHosts2: ", len(listOfHosts2))
+		print("Count for listOfObjectGroups2: ", len(listOfObjectGroups2))
+		print("Count for listOfServiceObjects2: ", len(listOfServiceObjects2))
+		print("Count for listOfPortObjects2: ", len(listOfPortObjects2))
+		print("Count for listOfProtocolObjects2: ", len(listOfProtocolObjects2))
+		print("Count for listOfIcmpObjects2: ", len(listOfIcmpObjects2))
+		print("Count for listOfAccessLists2: ", len(listOfAccessLists2))
+		print("Count for listOfInterfaces2: ", len(listOfInterfaces2))
+		print("Count for listOfTunnelGroups2: ", len(listOfTunnelGroups2))
 
-		print "---===BEGIN ACL COMPARISON===---"
+		print("---===BEGIN ACL COMPARISON===---")
 		
 		primaryConfigACL = ''
 		secondaryConfigACL = ''
@@ -1711,11 +1712,11 @@ def main():
 			primaryConfigACL = primaryConfigACL + x.name + " "
 		for x in listOfAccessLists2:
 			secondaryConfigACL = secondaryConfigACL + x.name + " "
-		print("ACL Choices on Primary Config: " + primaryConfigACL)
-		input3 = raw_input("Enter Primary Config ACL to compare with: ")
-		print("ACL Choices on Secondary Config: " + secondaryConfigACL)
-		input4 = raw_input("Enter Secondary Config ACL to compare against Primary: ")
-		input5 = raw_input("Enter the value to append to conflict ace/objects: ")
+		print(("ACL Choices on Primary Config: " + primaryConfigACL))
+		input3 = input("Enter Primary Config ACL to compare with: ")
+		print(("ACL Choices on Secondary Config: " + secondaryConfigACL))
+		input4 = input("Enter Secondary Config ACL to compare against Primary: ")
+		input5 = input("Enter the value to append to conflict ace/objects: ")
 		aceMatchList = []
 		aceNoMatchList = []
 		primaryACL = []
@@ -1813,8 +1814,8 @@ def main():
 					fileAclComparisonDebugDump.write("totalMatchValue" + str(totalMatchValue) + "\n")				
 				if totalMatchValue == 100:
 					fileAcl100MatchList.write("******MATCHING PAIR BELOW*****\n")
-                                        fileAcl100MatchList.write("Primary ACE  : "+ aceOneTemp.fullLine)
-                                        fileAcl100MatchList.write("Secondary ACE: "+ aceTwoTemp.fullLine)
+					fileAcl100MatchList.write("Primary ACE  : "+ aceOneTemp.fullLine)
+					fileAcl100MatchList.write("Secondary ACE: "+ aceTwoTemp.fullLine)
 					#print "MATCH!"
 					#Do Match stuff. Move ACE from starting list to Match list
 					aceMatchList.append(aceTwoTemp)
@@ -1830,10 +1831,10 @@ def main():
 					#Do A default case
 					1 == 1  #Just a placeholder
 		
-		print "ACE's in the Match List: ", len(aceMatchList)
-		print "ACE's in the NO Match List: ", len(aceNoMatchList)
-		print "ACE's in the secondaryACL List: ", len(secondaryACL.accessListSubRuleList)
-		print "ACE's in the primaryACL: ", len(primaryACL.accessListSubRuleList)	
+		print("ACE's in the Match List: ", len(aceMatchList))
+		print("ACE's in the NO Match List: ", len(aceNoMatchList))
+		print("ACE's in the secondaryACL List: ", len(secondaryACL.accessListSubRuleList))
+		print("ACE's in the primaryACL: ", len(primaryACL.accessListSubRuleList))	
 		#print "***aceMatchList***"
 		fileAclMatchList.write("*** ACE MATCH LIST ***\n")
 		for x in aceMatchList:
@@ -1929,9 +1930,9 @@ def main():
 		allPrintedObjects = set()
 		
 		#Print all the objects in the secondary config that have a conflict in the primary config
-                fileReqObjectsNameConflicts.write("All Objects in the Secondary config that have a name conflict in the Primary based on fullLine value\n")
-                if doDebugDump == True:
-                        fileReqObjectsNameConflictsDebug.write("All Objects in the Secondary config that have a name conflict in the Primary based on fullLine value\n")
+		fileReqObjectsNameConflicts.write("All Objects in the Secondary config that have a name conflict in the Primary based on fullLine value\n")
+		if doDebugDump == True:
+			fileReqObjectsNameConflictsDebug.write("All Objects in the Secondary config that have a name conflict in the Primary based on fullLine value\n")
 		for x in setOfRequiredObjectsNameConflicts:
 			if doDebugDump == True:
 				fileReqObjectsNameConflictsDebug.write("****Name of Object in Req List= "+x.fullLine)
@@ -2009,7 +2010,7 @@ def main():
 		fileReqObjectGroupCopyPasteAppendedDebug = open(outputFileReqObjectGroupCopyPasteAppendedDebug,'w')		
 #Copy the objects in the listOfObjectGroups2 to a new list where the Object Groups have the appended value
 		listOfObjectGroups2Appended = deepcopy(listOfObjectGroups2)
-		print "Count for listOfObjectGroups2Appended: ", len(listOfObjectGroups2Appended)         		
+		print("Count for listOfObjectGroups2Appended: ", len(listOfObjectGroups2Appended))         		
 #For all required objects to merge in, append identifier
 		for x in listOfObjectGroups2Appended:
 			x.fullLine = x.fullLine.replace(x.name,x.name+appendedValue)
@@ -2032,15 +2033,15 @@ def main():
 #Control stuff for text menu
 	if getFileFrom == 'rancidlist':
 		try:
-			svnRepo = configParser.get('SVNconfig','SVNrepo')
+			svnRepo = aConfigParser.get('SVNconfig','SVNrepo')
 		except:
-			print "Something bad happened when reading conf.ini SVNconfig Section. Just throwing my hands up"
+			print("Something bad happened when reading conf.ini SVNconfig Section. Just throwing my hands up")
 		#Get a SVN Client connection
 		client = pysvn.Client()
 		client.callback_ssl_server_trust_prompt = ssl_server_trust_prompt
 		#Get_login2 will pull the credentials for the conf.ini
 		client.callback_get_login = get_login2
-		print "Logged into SVN REPO"
+		print("Logged into SVN REPO")
 		#Read the config list and start looping
 		###configListLinesStripped = []
 		configListLines = configListFile.readlines()
@@ -2055,18 +2056,18 @@ def main():
 		#	hostListType.append(lineSplit[1])
 			#configListLinesStripped.append(line.strip())
 		###for line in configListLinesStripped:
-		print "----====Start Reading Through Device List====----"
+		print("----====Start Reading Through Device List====----")
 		for line in configListLines:
-			print "--Start Device"
+			print("--Start Device")
 			lineSplit = line.split()
 			device = lineSplit[0]
 			deviceType = lineSplit[1]
-			print device + " " + deviceType
+			print(device + " " + deviceType)
 			rev = pysvn.Revision(pysvn.opt_revision_kind.head)
 			info = client.info2(svnRepo+device,revision=rev,recurse=False)
 			revno = info[0][1].last_changed_rev.number
 			#revno = info[0][1].rev.number # revision number as an integer
-			print "lastChange Revision Number = " + str(revno)
+			print("lastChange Revision Number = " + str(revno))
 			deviceRepoRevisionNumber = revno
 			#Pull the device config into a temporary file for parsing
 			client.export(svnRepo+device, tempDir+"tempConfigFile"+device+".tmp")
