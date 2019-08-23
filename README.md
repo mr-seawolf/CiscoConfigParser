@@ -1,4 +1,7 @@
 
+8/23/2019 Migrated to Python 3.x so I can begin to modify the code to pull VLAN and Subnet info for Network asseting
+
+
 4/14 the section of code for this function "def addressInNetwork(ip,net):" was taken from http://stackoverflow.com/questions/819355/how-can-i-check-if-an-ip-is-in-a-network-in-python by the handle named "Johnson".
 I have NOT fully tested it but it appeared to work enough for my current purpose. Long term is to use the netaddr module, but coudn't right now.
 
